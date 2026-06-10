@@ -223,17 +223,17 @@ body { font-family:'DM Sans','Noto Sans SC','Microsoft YaHei','PingFang SC',sans
           <button class="btn-cyan flex-1" onclick="sendTx(0)" style="padding:7px 14px;font-size:11px;"><i class="fa-solid fa-rocket mr-1"></i>发送</button>
         </div>
       </div>
-      <div class="glass p-2 flex flex-col" style="max-height:160px;">
+      <div class="glass p-2 flex flex-col" style="flex:1;">
         <div class="flex items-center justify-between mb-1 px-1">
           <h2 class="font-display text-[10px] font-semibold uppercase tracking-wider" style="color:var(--text-primary);"><i class="fa-solid fa-clock mr-1" style="color:var(--accent-purple)"></i>待打包交易</h2>
           <span class="badge badge-pending text-[9px]" id="pendingBadge0">0</span>
         </div>
-        <div class="scroll-list-sm" id="pendingList0" style="max-height:120px;"></div>
+        <div class="scroll-list-sm" id="pendingList0"></div>
       </div>
 
-      <!-- Block Chain Visualization -->
+      <!-- Block Viz -->
       <div class="glass p-3 flex-1 flex flex-col">
-        <h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-2" style="color:var(--text-primary);"><i class="fa-solid fa-link mr-1" style="color:var(--accent-cyan)"></i>区块链可视化</h2>
+        <h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-2" style="color:var(--text-primary);"><i class="fa-solid fa-link mr-1" style="color:var(--accent-cyan)"></i>可视化</h2>
         <div class="flex-1 flex items-center overflow-x-auto" id="blockChainViz" style="gap:3px;">
           <div style="color:var(--text-muted);text-align:center;width:100%;font-size:10px;font-style:italic;">加载中...</div>
         </div>
@@ -300,10 +300,10 @@ body { font-family:'DM Sans','Noto Sans SC','Microsoft YaHei','PingFang SC',sans
     <span class="text-xs ml-2" style="color:var(--text-muted);" id="consensusStatus">--</span>
   </div>
 
-  <!-- Block Chain Visualization (all nodes) -->
+  <!-- Block Viz (all nodes) -->
   <div class="px-5 pt-2">
     <div class="glass p-3">
-      <h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-2" style="color:var(--text-primary);"><i class="fa-solid fa-link mr-1" style="color:var(--accent-cyan)"></i>区块链可视化</h2>
+      <h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-2" style="color:var(--text-primary);"><i class="fa-solid fa-link mr-1" style="color:var(--accent-cyan)"></i>可视化</h2>
       <div class="flex flex-col gap-2" id="multiBlockChainViz">
         <div style="color:var(--text-muted);text-align:center;font-size:10px;font-style:italic;">加载中...</div>
       </div>
@@ -631,14 +631,14 @@ function renderBlockList(elId, d) {
 function renderBlockChainViz(elId, d) {
   const el = document.getElementById(elId);
   if(!el||!d||!d.online||!d.chain.length) { if(el)el.innerHTML='<div style="color:var(--text-muted);text-align:center;width:100%;font-size:10px;font-style:italic;">暂无区块</div>'; return; }
-  const blocks = d.chain.slice(-8);
+  const blocks = d.chain.slice(-7);
   el.innerHTML = blocks.map((b,i)=>{
     const w = Math.min(24,Math.max(4,b.transactions?.length||1));
-    return '<div class="block-viz-item" onclick="showBlockDetail('+JSON.stringify(b).replace(/"/g,'&quot;')+')" style="flex-shrink:0;text-align:center;cursor:pointer;padding:4px 8px;border-radius:8px;background:rgba(0,212,255,'+(0.04+w*0.005)+');border:1px solid rgba(0,212,255,'+(0.08+w*0.01)+');transition:all 0.3s ease;min-width:60px;" title="Block #'+b.index+' — '+ (b.transactions?.length||0)+' TXs">'+
-      '<div class="font-display text-[10px] font-bold" style="color:var(--accent-cyan);">#'+b.index+'</div>'+
-      '<div class="font-mono text-[7px]" style="color:var(--text-secondary);">'+b.hash.slice(2,8)+'</div>'+
+    return '<div class="block-viz-item" onclick="showBlockDetail('+JSON.stringify(b).replace(/"/g,'&quot;')+')" style="flex-shrink:0;text-align:center;cursor:pointer;padding:6px 10px;border-radius:10px;background:rgba(0,212,255,'+(0.04+w*0.005)+');border:1px solid rgba(0,212,255,'+(0.08+w*0.01)+');transition:all 0.3s ease;min-width:74px;" title="Block #'+b.index+' — '+ (b.transactions?.length||0)+' TXs">'+
+      '<div class="font-display text-[11px] font-bold" style="color:var(--accent-cyan);">#'+b.index+'</div>'+
+      '<div class="font-mono text-[8px]" style="color:var(--text-secondary);">'+b.hash.slice(2,10)+'</div>'+
       '<div class="text-[7px] mt-0.5" style="color:'+(b.transactions?.length>0?'#4ade80':'var(--text-muted)')+';">'+(b.transactions?.length||0)+' TX</div>'+
-    '</div>'+(i<blocks.length-1?'<span style="flex-shrink:0;color:var(--accent-cyan);font-size:8px;align-self:center;">◆─◆</span>':'');
+    '</div>'+(i<blocks.length-1?'<span style="flex-shrink:0;color:var(--accent-cyan);font-size:10px;align-self:center;">◆─◆</span>':'');
   }).join('');
 }
 
@@ -648,13 +648,14 @@ function renderMultiBlockChainViz() {
   el.innerHTML = nodeUrls.map((_,i)=>{
     const d = nodesData[i];
     if(!d||!d.online||!d.chain.length) return '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;"><span class="font-mono text-[9px] font-bold" style="color:'+nodeColor(i)+';min-width:50px;">节点'+i+'</span><span style="color:var(--text-muted);font-size:9px;">离线</span></div>';
-    const blocks = d.chain.slice(-8);
+    const blocks = d.chain.slice(-7);
     return '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;"><span class="font-mono text-[9px] font-bold" style="color:'+nodeColor(i)+';min-width:50px;">节点'+i+'</span><div style="display:flex;align-items:center;gap:2px;overflow-x:auto;flex:1;">'+
       blocks.map((b,j)=>{
         const w = Math.min(20,Math.max(3,b.transactions?.length||1));
-        return '<div onclick="showBlockDetail('+JSON.stringify(b).replace(/"/g,'&quot;')+')" style="flex-shrink:0;cursor:pointer;text-align:center;padding:2px 6px;border-radius:6px;background:rgba(0,212,255,'+(0.03+w*0.004)+');border:1px solid rgba(0,212,255,'+(0.06+w*0.008)+');min-width:48px;">'+
-          '<span class="font-display text-[8px] font-bold" style="color:var(--accent-cyan);">#'+b.index+'</span>'+
-        '</div>'+(j<blocks.length-1?'<span style="color:var(--accent-cyan);font-size:6px;">◆</span>':'');
+        return '<div onclick="showBlockDetail('+JSON.stringify(b).replace(/"/g,'&quot;')+')" style="flex-shrink:0;cursor:pointer;text-align:center;padding:4px 7px;border-radius:7px;background:rgba(0,212,255,'+(0.03+w*0.004)+');border:1px solid rgba(0,212,255,'+(0.06+w*0.008)+');min-width:56px;">'+
+          '<span class="font-display text-[9px] font-bold" style="color:var(--accent-cyan);">#'+b.index+'</span>'+
+          '<div class="font-mono text-[6px]" style="color:var(--text-secondary);">'+b.hash.slice(2,10)+'</div>'+
+        '</div>'+(j<blocks.length-1?'<span style="color:var(--accent-cyan);font-size:7px;">◆</span>':'');
       }).join('')+'</div></div>';
   }).join('');
 }

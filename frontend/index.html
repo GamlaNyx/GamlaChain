@@ -170,6 +170,12 @@ body { font-family:'DM Sans',sans-serif; background:#1a1a2e; color:var(--text-pr
     <!-- Node status dots (multi mode) -->
     <span id="nodeStatusBar" class="hidden flex items-center gap-2"></span>
 
+    <!-- Simulate toggle -->
+    <button class="btn-outline btn-sm" id="btnSim" onclick="toggleSimulation()" style="border-color:rgba(236,72,153,0.4);">
+      <i class="fa-solid fa-play mr-1" style="color:var(--accent-pink);"></i><span id="btnSimLabel">Simulate</span>
+    </button>
+    <span id="simStatus" class="hidden text-[10px]" style="color:var(--accent-pink);"></span>
+
     <span class="text-xs" style="color:var(--text-muted);" id="clockDisplay">--</span>
   </div>
 </nav>
@@ -759,6 +765,78 @@ async function resolveOnSelected() {
   if(res) showToast('<i class="fa-solid fa-check-circle mr-2"></i>'+res.message,'res.message?.includes("replaced")?"info":"success"');
   else showToast('<i class="fa-solid fa-triangle-exclamation mr-2"></i>Resolve failed','error');
   poll();
+}
+
+// ============================================================
+// SIMULATION ENGINE
+// ============================================================
+const SIM_ADDRESSES = [
+  '0xalice_wallet_001','0xbob_wallet_002','0xcharlie_wallet_003',
+  '0xdave_wallet_004','0xeve_wallet_005','0xfrank_wallet_006',
+  '0xgrace_wallet_007','0xhank_wallet_008','0xiris_wallet_009',
+];
+let simRunning = false;
+let simTxTimer = null;
+let simBlockTimer = null;
+let simTxCount = 0;
+let simBlockCount = 0;
+let simNodeIdx = 0;
+let simStartTime = 0;
+
+function toggleSimulation() {
+  if(simRunning) { stopSimulation(); return; }
+  simRunning = true; simTxCount = 0; simBlockCount = 0;
+  simNodeIdx = mode==='multi'?parseInt(document.getElementById('resolveTarget')?.value||0):0;
+  simStartTime = Date.now();
+  document.getElementById('btnSim').classList.add('active');
+  document.getElementById('btnSimLabel').textContent = 'Stop';
+  document.getElementById('btnSim').querySelector('i').className = 'fa-solid fa-stop mr-1';
+  document.getElementById('simStatus').classList.remove('hidden');
+  document.getElementById('simStatus').textContent = 'Starting...';
+  showToast('<i class="fa-solid fa-rocket mr-2"></i>Simulation started on Node '+simNodeIdx+' — TX every 0.5-3s, Block every 2.5s','info');
+  scheduleTx();
+  scheduleBlock();
+}
+
+function stopSimulation() {
+  simRunning = false;
+  clearTimeout(simTxTimer); clearTimeout(simBlockTimer);
+  simTxTimer = null; simBlockTimer = null;
+  document.getElementById('btnSim').classList.remove('active');
+  document.getElementById('btnSimLabel').textContent = 'Simulate';
+  document.getElementById('btnSim').querySelector('i').className = 'fa-solid fa-play mr-1';
+  document.getElementById('simStatus').classList.add('hidden');
+  const elapsed = ((Date.now()-simStartTime)/1000).toFixed(0);
+  showToast('<i class="fa-solid fa-flag-checkered mr-2"></i>Simulation stopped — '+simTxCount+' TXs, '+simBlockCount+' blocks in '+elapsed+'s','info');
+}
+
+function scheduleTx() {
+  if(!simRunning) return;
+  const delay = 500 + Math.random()*2500; // 0.5-3s
+  simTxTimer = setTimeout(async ()=>{
+    if(!simRunning) return;
+    const from = SIM_ADDRESSES[Math.floor(Math.random()*SIM_ADDRESSES.length)];
+    let to = SIM_ADDRESSES[Math.floor(Math.random()*SIM_ADDRESSES.length)];
+    while(to===from) to = SIM_ADDRESSES[Math.floor(Math.random()*SIM_ADDRESSES.length)];
+    const amount = (Math.random()*49.9+0.1).toFixed(4);
+    const url = getNodeUrl(simNodeIdx);
+    await apiPost(url,'/api/v1/transactions',{sender:from,receiver:to,amount:parseFloat(amount),timestamp:Date.now()/1000,tx_hash:''});
+    simTxCount++;
+    document.getElementById('simStatus').textContent = simTxCount+' TX | '+simBlockCount+' blk | ' + ((Date.now()-simStartTime)/1000).toFixed(0)+'s';
+    scheduleTx(); // schedule next TX
+  }, delay);
+}
+
+function scheduleBlock() {
+  if(!simRunning) return;
+  simBlockTimer = setTimeout(async ()=>{
+    if(!simRunning) return;
+    const url = getNodeUrl(simNodeIdx);
+    await apiPost(url,'/api/v1/mine?miner_address=sim_miner');
+    simBlockCount++;
+    document.getElementById('simStatus').textContent = simTxCount+' TX | '+simBlockCount+' blk | ' + ((Date.now()-simStartTime)/1000).toFixed(0)+'s';
+    scheduleBlock(); // schedule next block (every 2.5s)
+  }, 2500);
 }
 
 // ============================================================

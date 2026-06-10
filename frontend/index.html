@@ -782,6 +782,7 @@ let simTxCount = 0;
 let simBlockCount = 0;
 let simNodeIdx = 0;
 let simStartTime = 0;
+let simMining = false;
 
 function toggleSimulation() {
   if(simRunning) { stopSimulation(); return; }
@@ -793,7 +794,7 @@ function toggleSimulation() {
   document.getElementById('btnSim').querySelector('i').className = 'fa-solid fa-stop mr-1';
   document.getElementById('simStatus').classList.remove('hidden');
   document.getElementById('simStatus').textContent = 'Starting...';
-  showToast('<i class="fa-solid fa-rocket mr-2"></i>Simulation started on Node '+simNodeIdx+' — TX every 0.5-3s, Block every 2.5s','info');
+  showToast('<i class="fa-solid fa-rocket mr-2"></i>Simulation started on Node '+simNodeIdx+' — TX every 0.17-1s, Block every 0.83s','info');
   scheduleTx();
   scheduleBlock();
 }
@@ -812,7 +813,7 @@ function stopSimulation() {
 
 function scheduleTx() {
   if(!simRunning) return;
-  const delay = 500 + Math.random()*2500; // 0.5-3s
+  const delay = 167 + Math.random()*833; // 0.17-1s
   simTxTimer = setTimeout(async ()=>{
     if(!simRunning) return;
     const from = SIM_ADDRESSES[Math.floor(Math.random()*SIM_ADDRESSES.length)];
@@ -830,13 +831,15 @@ function scheduleTx() {
 function scheduleBlock() {
   if(!simRunning) return;
   simBlockTimer = setTimeout(async ()=>{
-    if(!simRunning) return;
+    if(!simRunning || simMining) return;
+    simMining = true;
     const url = getNodeUrl(simNodeIdx);
     await apiPost(url,'/api/v1/mine?miner_address=sim_miner');
+    simMining = false;
     simBlockCount++;
     document.getElementById('simStatus').textContent = simTxCount+' TX | '+simBlockCount+' blk | ' + ((Date.now()-simStartTime)/1000).toFixed(0)+'s';
-    scheduleBlock(); // schedule next block (every 2.5s)
-  }, 2500);
+    scheduleBlock(); // schedule next block (every 0.83s)
+  }, 833);
 }
 
 // ============================================================

@@ -861,9 +861,12 @@ let simNodeIdx = 0;
 let simStartTime = 0;
 let simMining = false;
 
+let simSyncOk = 0;
+let simSyncFail = 0;
+
 function toggleSimulation() {
   if(simRunning) { stopSimulation(); return; }
-  simRunning = true; simTxCount = 0; simBlockCount = 0;
+  simRunning = true; simTxCount = 0; simBlockCount = 0; simSyncOk = 0; simSyncFail = 0;
   simStartTime = Date.now();
   document.getElementById('btnSim').classList.add('active');
   document.getElementById('btnSimLabel').textContent = '停止';
@@ -871,11 +874,19 @@ function toggleSimulation() {
   document.getElementById('simStatus').classList.remove('hidden');
   document.getElementById('simStatus').textContent = '启动中...';
   if(mode==='multi') {
-    showToast('<i class="fa-solid fa-rocket mr-2"></i>多节点模拟交易已启动 — 全部'+nodeUrls.length+'个节点 — TX间隔0.17-1s, 出块间隔0.83s','info');
-    for(let n=0;n<nodeUrls.length;n++) { scheduleTx(n); scheduleBlock(n); }
+    showToast('<i class="fa-solid fa-rocket mr-2"></i>多节点模拟 — TX广播到全部节点, 节点0挖矿后自动同步','info');
+    // Auto-register mesh, then start
+    (async ()=>{
+      for(let i=0;i<nodeUrls.length;i++) {
+        const others = nodeUrls.filter((_,j)=>j!==i);
+        await apiPost(nodeUrls[i],'/api/v1/nodes/register',{nodes:others});
+      }
+      scheduleTxMulti();
+      scheduleBlockMulti();
+    })();
   } else {
     showToast('<i class="fa-solid fa-rocket mr-2"></i>模拟交易已启动 — TX间隔0.17-1s, 出块间隔0.83s','info');
-    scheduleTx(0); scheduleBlock(0);
+    scheduleTxSingle(0); scheduleBlockSingle(0);
   }
 }
 
@@ -888,37 +899,75 @@ function stopSimulation() {
   document.getElementById('btnSim').querySelector('i').className = 'fa-solid fa-play mr-1';
   document.getElementById('simStatus').classList.add('hidden');
   const elapsed = ((Date.now()-simStartTime)/1000).toFixed(0);
-  showToast('<i class="fa-solid fa-flag-checkered mr-2"></i>模拟交易已停止 — '+simTxCount+' 笔交易, '+simBlockCount+' 个区块, 耗时'+elapsed+'s','info');
+  let msg = '模拟交易已停止 — '+simTxCount+' 笔交易, '+simBlockCount+' 个区块, 耗时'+elapsed+'s';
+  if(mode==='multi') msg += ' | 同步: '+simSyncOk+'成功/'+simSyncFail+'失败';
+  showToast('<i class="fa-solid fa-flag-checkered mr-2"></i>'+msg,'info');
 }
 
-function scheduleTx(nodeIdx) {
+// ── Single node: TX to one node ──
+function scheduleTxSingle(nodeIdx) {
   if(!simRunning) return;
   if(nodeIdx===undefined) nodeIdx = 0;
-  const delay = 167 + Math.random()*833; // 0.17-1s
-  const timerId = setTimeout(async ()=>{
+  const delay = 167 + Math.random()*833;
+  simTxTimer = setTimeout(async ()=>{
     if(!simRunning) return;
     const from = SIM_ADDRESSES[Math.floor(Math.random()*SIM_ADDRESSES.length)];
     let to = SIM_ADDRESSES[Math.floor(Math.random()*SIM_ADDRESSES.length)];
     while(to===from) to = SIM_ADDRESSES[Math.floor(Math.random()*SIM_ADDRESSES.length)];
     const amount = (Math.random()*49.9+0.1).toFixed(4);
-    const url = getNodeUrl(nodeIdx);
-    await apiPost(url,'/api/v1/transactions',{sender:from,receiver:to,amount:parseFloat(amount),timestamp:Date.now()/1000,tx_hash:''});
+    await apiPost(getNodeUrl(nodeIdx),'/api/v1/transactions',{sender:from,receiver:to,amount:parseFloat(amount),timestamp:Date.now()/1000,tx_hash:''});
     simTxCount++;
     document.getElementById('simStatus').textContent = simTxCount+' TX | '+simBlockCount+' blk | ' + ((Date.now()-simStartTime)/1000).toFixed(0)+'s';
-    scheduleTx(nodeIdx); // schedule next TX for same node
+    scheduleTxSingle(nodeIdx);
   }, delay);
 }
 
-function scheduleBlock(nodeIdx) {
+function scheduleBlockSingle(nodeIdx) {
   if(!simRunning) return;
   if(nodeIdx===undefined) nodeIdx = 0;
-  const timerId = setTimeout(async ()=>{
+  simBlockTimer = setTimeout(async ()=>{
     if(!simRunning) return;
-    const url = getNodeUrl(nodeIdx);
-    await apiPost(url,'/api/v1/mine?miner_address=sim_miner');
+    await apiPost(getNodeUrl(nodeIdx),'/api/v1/mine?miner_address=sim_miner');
     simBlockCount++;
     document.getElementById('simStatus').textContent = simTxCount+' TX | '+simBlockCount+' blk | ' + ((Date.now()-simStartTime)/1000).toFixed(0)+'s';
-    scheduleBlock(nodeIdx);
+    scheduleBlockSingle(nodeIdx);
+  }, 833);
+}
+
+// ── Multi node: TX broadcast to ALL nodes ──
+function scheduleTxMulti() {
+  if(!simRunning) return;
+  const delay = 167 + Math.random()*833;
+  simTxTimer = setTimeout(async ()=>{
+    if(!simRunning) return;
+    const from = SIM_ADDRESSES[Math.floor(Math.random()*SIM_ADDRESSES.length)];
+    let to = SIM_ADDRESSES[Math.floor(Math.random()*SIM_ADDRESSES.length)];
+    while(to===from) to = SIM_ADDRESSES[Math.floor(Math.random()*SIM_ADDRESSES.length)];
+    const amount = (Math.random()*49.9+0.1).toFixed(4);
+    const txBody = {sender:from,receiver:to,amount:parseFloat(amount),timestamp:Date.now()/1000,tx_hash:''};
+    // Broadcast same TX to all nodes
+    await Promise.allSettled(nodeUrls.map(u=>apiPost(u,'/api/v1/transactions',txBody)));
+    simTxCount += nodeUrls.length;
+    document.getElementById('simStatus').textContent = simTxCount+' TX | '+simBlockCount+' blk | '+((Date.now()-simStartTime)/1000).toFixed(0)+'s | ↻'+simSyncOk;
+    scheduleTxMulti();
+  }, delay);
+}
+
+// ── Multi node: mine on node 0, auto-sync all others ──
+function scheduleBlockMulti() {
+  if(!simRunning) return;
+  simBlockTimer = setTimeout(async ()=>{
+    if(!simRunning) return;
+    // Step 1: mine block on node 0 (the "miner")
+    await apiPost(nodeUrls[0],'/api/v1/mine?miner_address=sim_miner');
+    simBlockCount++;
+    // Step 2: auto-sync all other nodes (consensus)
+    for(let n=1;n<nodeUrls.length;n++) {
+      const res = await apiGet(nodeUrls[n],'/api/v1/nodes/resolve');
+      if(res) simSyncOk++; else simSyncFail++;
+    }
+    document.getElementById('simStatus').textContent = simTxCount+' TX | '+simBlockCount+' blk | '+((Date.now()-simStartTime)/1000).toFixed(0)+'s | ↻'+simSyncOk;
+    scheduleBlockMulti();
   }, 833);
 }
 

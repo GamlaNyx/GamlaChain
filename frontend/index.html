@@ -128,7 +128,8 @@ body { font-family:'DM Sans',sans-serif; background:#1a1a2e; color:var(--text-pr
 .multi-nodes-grid.cols-1 { grid-template-columns:1fr; }
 .multi-nodes-grid.cols-2 { grid-template-columns:1fr 1fr; }
 .multi-nodes-grid.cols-3 { grid-template-columns:1fr 1fr 1fr; }
-.multi-nodes-grid.cols-4 { grid-template-columns:1fr 1fr; }
+.multi-nodes-grid.cols-4 { grid-template-columns:1fr 1fr 1fr 1fr; }
+.multi-nodes-grid.cols-many { grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); }
 
 @media(max-width:1400px){.main-grid{grid-template-columns:1fr 1fr}.charts-col{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:14px}}
 @media(max-width:900px){.main-grid{grid-template-columns:1fr}.multi-nodes-grid[class*="cols-"]{grid-template-columns:1fr}.charts-col{grid-template-columns:1fr}}
@@ -346,12 +347,21 @@ function esc(json) { return JSON.stringify(json).replace(/"/g,'&quot;').replace(
 // ============================================================
 // API
 // ============================================================
+const FETCH_TIMEOUT = 5000;
+
+async function fetchWithTimeout(url, opts={}) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(()=>ctrl.abort(), FETCH_TIMEOUT);
+  try { const r=await fetch(url,{...opts,signal:ctrl.signal}); clearTimeout(timer); return r; }
+  catch(e){ clearTimeout(timer); throw e; }
+}
+
 async function apiGet(base, path) {
-  try { const r=await fetch(normalizeUrl(base)+path); if(!r.ok) return null; const j=await r.json(); return j.ok!==false?j:null; }
+  try { const r=await fetchWithTimeout(normalizeUrl(base)+path); if(!r.ok) return null; const j=await r.json(); return j.ok!==false?j:null; }
   catch { return null; }
 }
 async function apiPost(base, path, body) {
-  try { const r=await fetch(normalizeUrl(base)+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); if(!r.ok) return null; const j=await r.json(); return j.ok!==false?j:null; }
+  try { const r=await fetchWithTimeout(normalizeUrl(base)+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); if(!r.ok) return null; const j=await r.json(); return j.ok!==false?j:null; }
   catch { return null; }
 }
 
@@ -505,7 +515,8 @@ async function poll() {
     updateSingleView();
   } else {
     // Fetch all nodes in parallel
-    const results = await Promise.all(nodeUrls.map(u=>fetchNodeData(u)));
+    const settled = await Promise.allSettled(nodeUrls.map(u=>fetchNodeData(u)));
+    const results = settled.map(s=>s.status==='fulfilled'?s.value:{online:false,chain:[],length:0,difficulty:0,reward:0,nodes:[],node_id:'',pending:[],pending_count:0,valid:null,_error:s.status==='rejected'?s.reason:null});
     nodesData = results;
     // Update status dots
     nodeUrls.forEach((_,i)=>{
@@ -664,13 +675,13 @@ function updateMultiView() {
   }
 
   // Node detail cards
-  const cols = nodeUrls.length===1?1:nodeUrls.length===3?3:2;
+  const gc = nodeUrls.length; const cols = gc===1?1:gc===3?3:gc>=4?'many':2;
   const grid = document.getElementById('nodeCards');
   grid.className = 'multi-nodes-grid cols-'+cols;
 
   grid.innerHTML = nodeUrls.map((url,i)=>{
     const d = nodesData[i];
-    if(!d||!d.online) return `<div class="glass p-4"><h2 class="font-display text-xs font-semibold uppercase mb-2" style="color:${nodeColor(i)};"><i class="fa-solid fa-server mr-1.5"></i>Node ${i}</h2><div style="color:var(--text-muted);text-align:center;padding:40px;font-style:italic;">Offline — ${url}</div></div>`;
+    if(!d||!d.online) return `<div class="glass p-4"><h2 class="font-display text-xs font-semibold uppercase mb-2" style="color:${nodeColor(i)};"><i class="fa-solid fa-server mr-1.5"></i>Node ${i}</h2><div style="color:#ef4444;text-align:center;padding:30px;"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>${d?._error?'Timeout / unreachable':'Offline'} — ${url}</div><div style="color:var(--text-muted);text-align:center;font-size:10px;">Check that the server is running and reachable</div></div>`;
     return `<div class="glass p-4 flex flex-col" style="min-height:360px;">
       <div class="flex items-center justify-between mb-2">
         <h2 class="font-display text-[11px] font-semibold uppercase" style="color:${nodeColor(i)};"><i class="fa-solid fa-server mr-1.5"></i>Node ${i}</h2>

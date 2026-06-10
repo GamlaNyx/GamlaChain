@@ -104,6 +104,7 @@ body { font-family:'DM Sans','Noto Sans SC','Microsoft YaHei','PingFang SC',sans
 .block-item:hover,.tx-item:hover { background:rgba(255,255,255,0.07); border-color:var(--glass-border); }
 @keyframes newBlockGlow { 0%{border-color:var(--accent-cyan);box-shadow:0 0 16px rgba(0,212,255,0.4);background:rgba(0,212,255,0.1);} 100%{border-color:transparent;box-shadow:none;background:rgba(255,255,255,0.03);} }
 .block-item.new-block { animation:newBlockGlow 2s ease-out; }
+.block-viz-item:hover { background:rgba(0,212,255,0.15)!important; border-color:rgba(0,212,255,0.35)!important; transform:translateY(-2px); }
 
 .badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; letter-spacing:0.4px; }
 .badge-success { background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.25); }
@@ -222,12 +223,20 @@ body { font-family:'DM Sans','Noto Sans SC','Microsoft YaHei','PingFang SC',sans
           <button class="btn-cyan flex-1" onclick="sendTx(0)" style="padding:7px 14px;font-size:11px;"><i class="fa-solid fa-rocket mr-1"></i>发送</button>
         </div>
       </div>
-      <div class="glass p-3">
-        <div class="flex items-center justify-between mb-1.5">
-          <h2 class="font-display text-[10px] font-semibold uppercase tracking-wider" style="color:var(--text-primary);"><i class="fa-solid fa-clock mr-1.5" style="color:var(--accent-purple)"></i>Pending TXs</h2>
+      <div class="glass p-2 flex flex-col" style="max-height:160px;">
+        <div class="flex items-center justify-between mb-1 px-1">
+          <h2 class="font-display text-[10px] font-semibold uppercase tracking-wider" style="color:var(--text-primary);"><i class="fa-solid fa-clock mr-1" style="color:var(--accent-purple)"></i>待打包交易</h2>
           <span class="badge badge-pending text-[9px]" id="pendingBadge0">0</span>
         </div>
-        <div class="scroll-list-sm" id="pendingList0" style="max-height:140px;"></div>
+        <div class="scroll-list-sm" id="pendingList0" style="max-height:120px;"></div>
+      </div>
+
+      <!-- Block Chain Visualization -->
+      <div class="glass p-3 flex-1 flex flex-col">
+        <h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-2" style="color:var(--text-primary);"><i class="fa-solid fa-link mr-1" style="color:var(--accent-cyan)"></i>区块链可视化</h2>
+        <div class="flex-1 flex items-center overflow-x-auto" id="blockChainViz" style="gap:3px;">
+          <div style="color:var(--text-muted);text-align:center;width:100%;font-size:10px;font-style:italic;">加载中...</div>
+        </div>
       </div>
     </div>
 
@@ -289,6 +298,16 @@ body { font-family:'DM Sans','Noto Sans SC','Microsoft YaHei','PingFang SC',sans
     <select id="resolveTarget" class="glass-input" style="width:auto;font-size:10px;padding:4px 8px;"></select>
     <button class="btn-purple btn-sm" onclick="resolveOnSelected()"><i class="fa-solid fa-scale-balanced mr-1"></i>执行共识</button>
     <span class="text-xs ml-2" style="color:var(--text-muted);" id="consensusStatus">--</span>
+  </div>
+
+  <!-- Block Chain Visualization (all nodes) -->
+  <div class="px-5 pt-2">
+    <div class="glass p-3">
+      <h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-2" style="color:var(--text-primary);"><i class="fa-solid fa-link mr-1" style="color:var(--accent-cyan)"></i>区块链可视化</h2>
+      <div class="flex flex-col gap-2" id="multiBlockChainViz">
+        <div style="color:var(--text-muted);text-align:center;font-size:10px;font-style:italic;">加载中...</div>
+      </div>
+    </div>
   </div>
 
   <!-- Comparison stats table -->
@@ -579,6 +598,8 @@ function updateSingleView() {
 
   // Blocks
   renderBlockList('blockList0', d);
+  // Block chain viz
+  renderBlockChainViz("blockChainViz", d);
   // Pending
   renderPendingList('pendingList0', d, 'pendingBadge0');
   // Charts
@@ -606,6 +627,36 @@ function renderBlockList(elId, d) {
     </div>
   `).join('');
   el.scrollTop = Math.min(st, el.scrollHeight);
+}
+function renderBlockChainViz(elId, d) {
+  const el = document.getElementById(elId);
+  if(!el||!d||!d.online||!d.chain.length) { if(el)el.innerHTML='<div style="color:var(--text-muted);text-align:center;width:100%;font-size:10px;font-style:italic;">暂无区块</div>'; return; }
+  const blocks = d.chain.slice(-8);
+  el.innerHTML = blocks.map((b,i)=>{
+    const w = Math.min(24,Math.max(4,b.transactions?.length||1));
+    return '<div class="block-viz-item" onclick="showBlockDetail('+JSON.stringify(b).replace(/"/g,'&quot;')+')" style="flex-shrink:0;text-align:center;cursor:pointer;padding:4px 8px;border-radius:8px;background:rgba(0,212,255,'+(0.04+w*0.005)+');border:1px solid rgba(0,212,255,'+(0.08+w*0.01)+');transition:all 0.3s ease;min-width:60px;" title="Block #'+b.index+' — '+ (b.transactions?.length||0)+' TXs">'+
+      '<div class="font-display text-[10px] font-bold" style="color:var(--accent-cyan);">#'+b.index+'</div>'+
+      '<div class="font-mono text-[7px]" style="color:var(--text-secondary);">'+b.hash.slice(2,8)+'</div>'+
+      '<div class="text-[7px] mt-0.5" style="color:'+(b.transactions?.length>0?'#4ade80':'var(--text-muted)')+';">'+(b.transactions?.length||0)+' TX</div>'+
+    '</div>'+(i<blocks.length-1?'<span style="flex-shrink:0;color:var(--accent-cyan);font-size:8px;align-self:center;">◆─◆</span>':'');
+  }).join('');
+}
+
+function renderMultiBlockChainViz() {
+  const el = document.getElementById('multiBlockChainViz');
+  if(!el) return;
+  el.innerHTML = nodeUrls.map((_,i)=>{
+    const d = nodesData[i];
+    if(!d||!d.online||!d.chain.length) return '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;"><span class="font-mono text-[9px] font-bold" style="color:'+nodeColor(i)+';min-width:50px;">节点'+i+'</span><span style="color:var(--text-muted);font-size:9px;">离线</span></div>';
+    const blocks = d.chain.slice(-8);
+    return '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;"><span class="font-mono text-[9px] font-bold" style="color:'+nodeColor(i)+';min-width:50px;">节点'+i+'</span><div style="display:flex;align-items:center;gap:2px;overflow-x:auto;flex:1;">'+
+      blocks.map((b,j)=>{
+        const w = Math.min(20,Math.max(3,b.transactions?.length||1));
+        return '<div onclick="showBlockDetail('+JSON.stringify(b).replace(/"/g,'&quot;')+')" style="flex-shrink:0;cursor:pointer;text-align:center;padding:2px 6px;border-radius:6px;background:rgba(0,212,255,'+(0.03+w*0.004)+');border:1px solid rgba(0,212,255,'+(0.06+w*0.008)+');min-width:48px;">'+
+          '<span class="font-display text-[8px] font-bold" style="color:var(--accent-cyan);">#'+b.index+'</span>'+
+        '</div>'+(j<blocks.length-1?'<span style="color:var(--accent-cyan);font-size:6px;">◆</span>':'');
+      }).join('')+'</div></div>';
+  }).join('');
 }
 
 function renderPendingList(elId, d, badgeId) {
@@ -697,6 +748,9 @@ function updateMultiView() {
     cs.textContent = '节点未全部注册 — click "全部注册 (网格)"';
     cs.style.color='var(--text-muted)';
   }
+
+  // Block chain viz (multi)
+  renderMultiBlockChainViz();
 
   // Node detail cards
   const gc = nodeUrls.length; const cols = gc===1?1:gc===3?3:gc>=4?'many':2;
@@ -809,58 +863,61 @@ let simMining = false;
 function toggleSimulation() {
   if(simRunning) { stopSimulation(); return; }
   simRunning = true; simTxCount = 0; simBlockCount = 0;
-  simNodeIdx = mode==='multi'?parseInt(document.getElementById('resolveTarget')?.value||0):0;
   simStartTime = Date.now();
   document.getElementById('btnSim').classList.add('active');
-  document.getElementById('btnSimLabel').textContent = 'Stop';
+  document.getElementById('btnSimLabel').textContent = '停止';
   document.getElementById('btnSim').querySelector('i').className = 'fa-solid fa-stop mr-1';
   document.getElementById('simStatus').classList.remove('hidden');
   document.getElementById('simStatus').textContent = '启动中...';
-  showToast('<i class="fa-solid fa-rocket mr-2"></i>模拟交易已启动 — 节点'+simNodeIdx+' — TX间隔0.17-1s, 出块间隔0.83s','info');
-  scheduleTx();
-  scheduleBlock();
+  if(mode==='multi') {
+    showToast('<i class="fa-solid fa-rocket mr-2"></i>多节点模拟交易已启动 — 全部'+nodeUrls.length+'个节点 — TX间隔0.17-1s, 出块间隔0.83s','info');
+    for(let n=0;n<nodeUrls.length;n++) { scheduleTx(n); scheduleBlock(n); }
+  } else {
+    showToast('<i class="fa-solid fa-rocket mr-2"></i>模拟交易已启动 — TX间隔0.17-1s, 出块间隔0.83s','info');
+    scheduleTx(0); scheduleBlock(0);
+  }
 }
 
 function stopSimulation() {
   simRunning = false;
-  clearTimeout(simTxTimer); clearTimeout(simBlockTimer);
+  simTxTimer&&clearTimeout(simTxTimer); simBlockTimer&&clearTimeout(simBlockTimer);
   simTxTimer = null; simBlockTimer = null;
   document.getElementById('btnSim').classList.remove('active');
-  document.getElementById('btnSimLabel').textContent = 'Simulate';
+  document.getElementById('btnSimLabel').textContent = '模拟交易';
   document.getElementById('btnSim').querySelector('i').className = 'fa-solid fa-play mr-1';
   document.getElementById('simStatus').classList.add('hidden');
   const elapsed = ((Date.now()-simStartTime)/1000).toFixed(0);
   showToast('<i class="fa-solid fa-flag-checkered mr-2"></i>模拟交易已停止 — '+simTxCount+' 笔交易, '+simBlockCount+' 个区块, 耗时'+elapsed+'s','info');
 }
 
-function scheduleTx() {
+function scheduleTx(nodeIdx) {
   if(!simRunning) return;
+  if(nodeIdx===undefined) nodeIdx = 0;
   const delay = 167 + Math.random()*833; // 0.17-1s
-  simTxTimer = setTimeout(async ()=>{
+  const timerId = setTimeout(async ()=>{
     if(!simRunning) return;
     const from = SIM_ADDRESSES[Math.floor(Math.random()*SIM_ADDRESSES.length)];
     let to = SIM_ADDRESSES[Math.floor(Math.random()*SIM_ADDRESSES.length)];
     while(to===from) to = SIM_ADDRESSES[Math.floor(Math.random()*SIM_ADDRESSES.length)];
     const amount = (Math.random()*49.9+0.1).toFixed(4);
-    const url = getNodeUrl(simNodeIdx);
+    const url = getNodeUrl(nodeIdx);
     await apiPost(url,'/api/v1/transactions',{sender:from,receiver:to,amount:parseFloat(amount),timestamp:Date.now()/1000,tx_hash:''});
     simTxCount++;
     document.getElementById('simStatus').textContent = simTxCount+' TX | '+simBlockCount+' blk | ' + ((Date.now()-simStartTime)/1000).toFixed(0)+'s';
-    scheduleTx(); // schedule next TX
+    scheduleTx(nodeIdx); // schedule next TX for same node
   }, delay);
 }
 
-function scheduleBlock() {
+function scheduleBlock(nodeIdx) {
   if(!simRunning) return;
-  simBlockTimer = setTimeout(async ()=>{
-    if(!simRunning || simMining) { scheduleBlock(); return; } // skip this tick, reschedule
-    simMining = true;
-    const url = getNodeUrl(simNodeIdx);
+  if(nodeIdx===undefined) nodeIdx = 0;
+  const timerId = setTimeout(async ()=>{
+    if(!simRunning) return;
+    const url = getNodeUrl(nodeIdx);
     await apiPost(url,'/api/v1/mine?miner_address=sim_miner');
-    simMining = false;
     simBlockCount++;
     document.getElementById('simStatus').textContent = simTxCount+' TX | '+simBlockCount+' blk | ' + ((Date.now()-simStartTime)/1000).toFixed(0)+'s';
-    scheduleBlock();
+    scheduleBlock(nodeIdx);
   }, 833);
 }
 

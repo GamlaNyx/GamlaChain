@@ -26,7 +26,7 @@ tailwind.config = {
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 
@@ -45,7 +45,7 @@ tailwind.config = {
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 html { scroll-behavior:smooth; }
-body { font-family:'DM Sans',sans-serif; background:#1a1a2e; color:var(--text-primary); min-height:100vh; overflow-x:hidden; line-height:1.6; }
+body { font-family:'DM Sans','Noto Sans SC','Microsoft YaHei','PingFang SC',sans-serif; background:#1a1a2e; color:var(--text-primary); min-height:100vh; overflow-x:hidden; line-height:1.6; }
 
 .bg-orb { position:fixed; border-radius:50%; filter:blur(120px); opacity:0.12; pointer-events:none; z-index:0; animation:orbFloat 20s ease-in-out infinite; }
 .bg-orb.cyan  { width:600px; height:600px; background:#00d4ff; top:-200px; right:-150px; animation-delay:0s; }
@@ -71,15 +71,15 @@ body { font-family:'DM Sans',sans-serif; background:#1a1a2e; color:var(--text-pr
 .glass-input:focus { border-color:var(--accent-cyan); box-shadow:0 0 0 3px rgba(0,212,255,0.1); background:rgba(255,255,255,0.08); }
 .glass-input::placeholder { color:var(--text-muted); }
 
-.btn-cyan { background:var(--gradient-cyan); color:#0a0a1a; border:none; border-radius:10px; padding:10px 20px; font-family:'DM Sans',sans-serif; font-weight:600; font-size:13px; cursor:pointer; transition:all 0.3s ease; letter-spacing:0.3px; }
+.btn-cyan { background:var(--gradient-cyan); color:#0a0a1a; border:none; border-radius:10px; padding:10px 20px; font-family:'DM Sans','Noto Sans SC','Microsoft YaHei','PingFang SC',sans-serif; font-weight:600; font-size:13px; cursor:pointer; transition:all 0.3s ease; letter-spacing:0.3px; }
 .btn-cyan:hover { box-shadow:0 0 24px rgba(0,212,255,0.35); transform:translateY(-1px); }
 .btn-cyan:active { transform:scale(0.97); }
 
-.btn-purple { background:var(--gradient-purple); color:white; border:none; border-radius:10px; padding:10px 20px; font-family:'DM Sans',sans-serif; font-weight:600; font-size:13px; cursor:pointer; transition:all 0.3s ease; }
+.btn-purple { background:var(--gradient-purple); color:white; border:none; border-radius:10px; padding:10px 20px; font-family:'DM Sans','Noto Sans SC','Microsoft YaHei','PingFang SC',sans-serif; font-weight:600; font-size:13px; cursor:pointer; transition:all 0.3s ease; }
 .btn-purple:hover { box-shadow:0 0 24px rgba(124,58,237,0.35); transform:translateY(-1px); }
 .btn-purple:active { transform:scale(0.97); }
 
-.btn-outline { background:transparent; border:1px solid var(--glass-border); color:var(--text-primary); border-radius:10px; padding:8px 16px; font-family:'DM Sans',sans-serif; font-weight:500; font-size:12px; cursor:pointer; transition:all 0.3s ease; white-space:nowrap; }
+.btn-outline { background:transparent; border:1px solid var(--glass-border); color:var(--text-primary); border-radius:10px; padding:8px 16px; font-family:'DM Sans','Noto Sans SC','Microsoft YaHei','PingFang SC',sans-serif; font-weight:500; font-size:12px; cursor:pointer; transition:all 0.3s ease; white-space:nowrap; }
 .btn-outline:hover { border-color:rgba(255,255,255,0.3); background:rgba(255,255,255,0.05); }
 .btn-outline.active { border-color:var(--accent-cyan); background:rgba(0,212,255,0.1); color:var(--accent-cyan); }
 .btn-sm { padding:5px 10px; font-size:10px; }
@@ -176,7 +176,7 @@ body { font-family:'DM Sans',sans-serif; background:#1a1a2e; color:var(--text-pr
 
     <!-- Simulate toggle -->
     <button class="btn-outline btn-sm" id="btnSim" onclick="toggleSimulation()" style="border-color:rgba(236,72,153,0.4);">
-      <i class="fa-solid fa-play mr-1" style="color:var(--accent-pink);"></i><span id="btnSimLabel">Simulate</span>
+      <i class="fa-solid fa-play mr-1" style="color:var(--accent-pink);"></i><span id="btnSimLabel">模拟交易</span>
     </button>
     <span id="simStatus" class="hidden text-[10px]" style="color:var(--accent-pink);"></span>
 
@@ -188,11 +188,11 @@ body { font-family:'DM Sans',sans-serif; background:#1a1a2e; color:var(--text-pr
 <div id="viewSingle" class="pt-14 relative z-10">
   <!-- Stats Row -->
   <div class="px-5 pt-4 grid grid-cols-5 gap-3" id="statsRowA">
-    <div class="stat-card animate-in stagger-1"><div class="text-[10px] uppercase tracking-wider mb-0.5" style="color:var(--text-muted)">Block Height</div><div class="text-xl font-display font-bold" style="color:var(--accent-cyan)"><span id="sHeight">--</span><span class="text-[10px] font-body ml-1.5" style="color:var(--text-muted);" id="sHeightDelta"></span></div></div>
-    <div class="stat-card animate-in stagger-2"><div class="text-[10px] uppercase tracking-wider mb-0.5" style="color:var(--text-muted)">Total TXs</div><div class="text-xl font-display font-bold" style="color:var(--accent-blue)" id="sTxCount">--</div></div>
-    <div class="stat-card animate-in stagger-3"><div class="text-[10px] uppercase tracking-wider mb-0.5" style="color:var(--text-muted)">Difficulty</div><div class="text-xl font-display font-bold" style="color:var(--accent-purple)" id="sDifficulty">--</div></div>
-    <div class="stat-card animate-in stagger-4"><div class="text-[10px] uppercase tracking-wider mb-0.5" style="color:var(--text-muted)">Pending Pool</div><div class="text-xl font-display font-bold" style="color:var(--accent-pink)" id="sPending">--</div></div>
-    <div class="stat-card animate-in stagger-5"><div class="text-[10px] uppercase tracking-wider mb-0.5" style="color:var(--text-muted)">Total Supply</div><div class="text-xl font-display font-bold" style="color:#4ade80" id="sSupplyStat">--</div></div>
+    <div class="stat-card animate-in stagger-1"><div class="text-[10px] uppercase tracking-wider mb-0.5" style="color:var(--text-muted)">区块高度</div><div class="text-xl font-display font-bold" style="color:var(--accent-cyan)"><span id="sHeight">--</span><span class="text-[10px] font-body ml-1.5" style="color:var(--text-muted);" id="sHeightDelta"></span></div></div>
+    <div class="stat-card animate-in stagger-2"><div class="text-[10px] uppercase tracking-wider mb-0.5" style="color:var(--text-muted)">总交易数</div><div class="text-xl font-display font-bold" style="color:var(--accent-blue)" id="sTxCount">--</div></div>
+    <div class="stat-card animate-in stagger-3"><div class="text-[10px] uppercase tracking-wider mb-0.5" style="color:var(--text-muted)">挖矿难度</div><div class="text-xl font-display font-bold" style="color:var(--accent-purple)" id="sDifficulty">--</div></div>
+    <div class="stat-card animate-in stagger-4"><div class="text-[10px] uppercase tracking-wider mb-0.5" style="color:var(--text-muted)">待打包池</div><div class="text-xl font-display font-bold" style="color:var(--accent-pink)" id="sPending">--</div></div>
+    <div class="stat-card animate-in stagger-5"><div class="text-[10px] uppercase tracking-wider mb-0.5" style="color:var(--text-muted)">流通总量</div><div class="text-xl font-display font-bold" style="color:#4ade80" id="sSupplyStat">--</div></div>
   </div>
 
   <!-- 3-col layout -->
@@ -200,10 +200,10 @@ body { font-family:'DM Sans',sans-serif; background:#1a1a2e; color:var(--text-pr
     <div class="glass p-4 flex flex-col animate-in stagger-1" style="min-height:560px;">
       <div class="flex items-center justify-between mb-3">
         <h2 class="font-display text-xs font-semibold uppercase tracking-wider" style="color:var(--text-primary);"><i class="fa-solid fa-cube mr-1.5" style="color:var(--accent-cyan)"></i>Blocks</h2>
-        <button class="btn-outline btn-sm" onclick="mineOnNode(0)"><i class="fa-solid fa-hammer mr-1"></i>Mine</button>
+        <button class="btn-outline btn-sm" onclick="mineOnNode(0)"><i class="fa-solid fa-hammer mr-1"></i>挖矿</button>
       </div>
       <div class="flex items-center gap-1 mb-2">
-        <input class="glass-input" type="text" id="searchInput" placeholder="#height or 0x..." style="font-size:10px;padding:5px 8px;flex:1;" onkeydown="if(event.key==='Enter')doSearch()">
+        <input class="glass-input" type="text" id="searchInput" placeholder="#区块号 或 0x地址..." style="font-size:10px;padding:5px 8px;flex:1;" onkeydown="if(event.key==='Enter')doSearch()">
         <button class="btn-outline btn-sm" onclick="doSearch()" style="padding:5px 8px;"><i class="fa-solid fa-search"></i></button>
       </div>
       <span class="text-[9px] mb-1.5" style="color:var(--text-muted);" id="searchResult"></span>
@@ -212,14 +212,14 @@ body { font-family:'DM Sans',sans-serif; background:#1a1a2e; color:var(--text-pr
 
     <div class="flex flex-col gap-3 animate-in stagger-2">
       <div class="glass p-4">
-        <div class="flex items-center justify-between mb-2"><h2 class="font-display text-xs font-semibold uppercase tracking-wider" style="color:var(--text-primary);"><i class="fa-solid fa-paper-plane mr-1.5" style="color:var(--accent-pink)"></i>New Transaction</h2><button class="btn-outline btn-sm" onclick="quickFillTx()" title="Random fill" style="padding:3px 8px;font-size:9px;"><i class="fa-solid fa-shuffle mr-1"></i>Fill</button></div>
+        <div class="flex items-center justify-between mb-2"><h2 class="font-display text-xs font-semibold uppercase tracking-wider" style="color:var(--text-primary);"><i class="fa-solid fa-paper-plane mr-1.5" style="color:var(--accent-pink)"></i>New Transaction</h2><button class="btn-outline btn-sm" onclick="quickFillTx()" title="随机填充" style="padding:3px 8px;font-size:9px;"><i class="fa-solid fa-shuffle mr-1"></i>随机</button></div>
         <div class="grid grid-cols-2 gap-2 mb-2">
-          <input class="glass-input" type="text" id="txSender" placeholder="Sender address" style="font-size:11px;padding:7px 10px;">
-          <input class="glass-input" type="text" id="txReceiver" placeholder="Receiver address" style="font-size:11px;padding:7px 10px;">
+          <input class="glass-input" type="text" id="txSender" placeholder="发送方地址" style="font-size:11px;padding:7px 10px;">
+          <input class="glass-input" type="text" id="txReceiver" placeholder="接收方地址" style="font-size:11px;padding:7px 10px;">
         </div>
         <div class="flex gap-2">
-          <input class="glass-input" type="number" id="txAmount" placeholder="Amount" step="0.0001" style="font-size:11px;padding:7px 10px;flex:2;">
-          <button class="btn-cyan flex-1" onclick="sendTx(0)" style="padding:7px 14px;font-size:11px;"><i class="fa-solid fa-rocket mr-1"></i>Send</button>
+          <input class="glass-input" type="number" id="txAmount" placeholder="金额" step="0.0001" style="font-size:11px;padding:7px 10px;flex:2;">
+          <button class="btn-cyan flex-1" onclick="sendTx(0)" style="padding:7px 14px;font-size:11px;"><i class="fa-solid fa-rocket mr-1"></i>发送</button>
         </div>
       </div>
       <div class="glass p-4 flex-1">
@@ -232,38 +232,38 @@ body { font-family:'DM Sans',sans-serif; background:#1a1a2e; color:var(--text-pr
     </div>
 
     <div class="flex flex-col gap-3 animate-in stagger-3 charts-col">
-      <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-chart-line mr-1" style="color:var(--accent-cyan)"></i>Block Time (s)</h2><div class="chart-wrap"><canvas id="chartBlockTime"></canvas></div></div>
-      <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-chart-bar mr-1" style="color:var(--accent-purple)"></i>TX per Block</h2><div class="chart-wrap"><canvas id="chartTxCount"></canvas></div></div>
-      <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-weight-hanging mr-1" style="color:var(--accent-purple)"></i>Block Size (KB)</h2><div class="chart-wrap"><canvas id="chartBlockSize"></canvas></div></div>
+      <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-chart-line mr-1" style="color:var(--accent-cyan)"></i>出块时间 (秒)</h2><div class="chart-wrap"><canvas id="chartBlockTime"></canvas></div></div>
+      <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-chart-bar mr-1" style="color:var(--accent-purple)"></i>每块交易数</h2><div class="chart-wrap"><canvas id="chartTxCount"></canvas></div></div>
+      <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-weight-hanging mr-1" style="color:var(--accent-purple)"></i>区块大小 (KB)</h2><div class="chart-wrap"><canvas id="chartBlockSize"></canvas></div></div>
     </div>
   </div>
 
   <div class="px-5 pb-2 grid grid-cols-3 gap-3 animate-in stagger-4">
-    <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-chart-pie mr-1" style="color:var(--accent-pink)"></i>TX Pool</h2><div class="chart-wrap"><canvas id="chartTxPie"></canvas></div></div>
-    <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-check-circle mr-1" style="color:#22c55e"></i>Chain Valid</h2><div class="chart-wrap"><canvas id="chartValid"></canvas></div></div>
+    <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-chart-pie mr-1" style="color:var(--accent-pink)"></i>交易池</h2><div class="chart-wrap"><canvas id="chartTxPie"></canvas></div></div>
+    <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-check-circle mr-1" style="color:#22c55e"></i>链有效性</h2><div class="chart-wrap"><canvas id="chartValid"></canvas></div></div>
     <div class="glass p-3 flex flex-col">
       <h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-2" style="color:var(--text-muted)"><i class="fa-solid fa-wallet mr-1" style="color:var(--accent-cyan)"></i>Address Explorer</h2>
       <div class="flex gap-1.5 mb-2">
-        <input class="glass-input" type="text" id="addrInput" placeholder="Paste address (0x...)" style="font-size:10px;padding:5px 8px;flex:1;" onkeydown="if(event.key==='Enter')lookupAddress()">
-        <button class="btn-cyan btn-sm" onclick="lookupAddress()" style="padding:5px 10px;font-size:10px;">Lookup</button>
+        <input class="glass-input" type="text" id="addrInput" placeholder="粘贴地址 (0x...)" style="font-size:10px;padding:5px 8px;flex:1;" onkeydown="if(event.key==='Enter')lookupAddress()">
+        <button class="btn-cyan btn-sm" onclick="lookupAddress()" style="padding:5px 10px;font-size:10px;">查询</button>
       </div>
       <div class="flex items-center justify-between mb-1.5">
-        <span class="text-[10px]" style="color:var(--text-muted);">Balance:</span>
+        <span class="text-[10px]" style="color:var(--text-muted);">余额：</span>
         <span class="font-display text-sm font-bold" style="color:#4ade80;" id="addrBalance">--</span>
       </div>
-      <div class="text-[10px] uppercase tracking-wider mb-1" style="color:var(--text-muted);">History <span class="text-[9px] ml-1" style="color:var(--text-muted);" id="addrTxCount"></span></div>
-      <div class="scroll-list-sm flex-1" id="addrHistory"><div style="color:var(--text-muted);text-align:center;padding:15px;font-style:italic;font-size:10px;">Enter an address and click Lookup</div></div>
+      <div class="text-[10px] uppercase tracking-wider mb-1" style="color:var(--text-muted);">交易记录 <span class="text-[9px] ml-1" style="color:var(--text-muted);" id="addrTxCount"></span></div>
+      <div class="scroll-list-sm flex-1" id="addrHistory"><div style="color:var(--text-muted);text-align:center;padding:15px;font-style:italic;font-size:10px;">输入地址并点击查询</div></div>
     </div>
   </div>
 
   <!-- Compact chain info bar -->
   <div class="px-5 pb-4 flex items-center gap-4 text-[10px] flex-wrap" style="color:var(--text-muted);">
-    <span>Chain: <b style="color:var(--text-primary);">gamla-8848</b></span>
-    <span>Consensus: <b style="color:var(--text-primary);">PoW</b></span>
-    <span>Node: <b style="color:var(--text-primary);font-family:JetBrains Mono,monospace;" id="sNodeId">--</b></span>
-    <span>Reward: <b style="color:#4ade80;" id="sReward">--</b></span>
-    <span>Avg Block: <b style="color:var(--text-primary);" id="sAvgTime">--</b></span>
-    <span>Peers: <b style="color:var(--text-primary);" id="sPeerList">none</b></span>
+    <span>链： <b style="color:var(--text-primary);">gamla-8848</b></span>
+    <span>共识： <b style="color:var(--text-primary);">PoW</b></span>
+    <span>节点： <b style="color:var(--text-primary);font-family:JetBrains Mono,monospace;" id="sNodeId">--</b></span>
+    <span>奖励： <b style="color:#4ade80;" id="sReward">--</b></span>
+    <span>平均出块： <b style="color:var(--text-primary);" id="sAvgTime">--</b></span>
+    <span>对等节点： <b style="color:var(--text-primary);" id="sPeerList">无</b></span>
   </div>
 </div>
 
@@ -284,10 +284,10 @@ body { font-family:'DM Sans',sans-serif; background:#1a1a2e; color:var(--text-pr
 
   <!-- Consensus bar -->
   <div class="flex items-center gap-2 px-5 pt-2 flex-wrap">
-    <button class="btn-outline btn-sm" onclick="registerAllNodes()"><i class="fa-solid fa-link mr-1"></i>Register All (Mesh)</button>
-    <span class="text-xs" style="color:var(--text-muted);">Resolve on:</span>
+    <button class="btn-outline btn-sm" onclick="registerAllNodes()"><i class="fa-solid fa-link mr-1"></i>全部注册 (网格)</button>
+    <span class="text-xs" style="color:var(--text-muted);">共识目标：</span>
     <select id="resolveTarget" class="glass-input" style="width:auto;font-size:10px;padding:4px 8px;"></select>
-    <button class="btn-purple btn-sm" onclick="resolveOnSelected()"><i class="fa-solid fa-scale-balanced mr-1"></i>Resolve</button>
+    <button class="btn-purple btn-sm" onclick="resolveOnSelected()"><i class="fa-solid fa-scale-balanced mr-1"></i>执行共识</button>
     <span class="text-xs ml-2" style="color:var(--text-muted);" id="consensusStatus">--</span>
   </div>
 
@@ -405,8 +405,8 @@ function setMode(newMode) {
 function addNode() {
   const input = document.getElementById('newNodeUrl');
   const url = normalizeUrl(input.value.trim());
-  if(!url.startsWith('http://')&&!url.startsWith('https://')) { showToast('URL must start with http:// or https://','error'); return; }
-  if(nodeUrls.includes(url)) { showToast('Node already exists','error'); return; }
+  if(!url.startsWith('http://')&&!url.startsWith('https://')) { showToast('URL 必须以 http:// 或 https:// 开头','error'); return; }
+  if(nodeUrls.includes(url)) { showToast('节点已存在','error'); return; }
   nodeUrls.push(url);
   saveNodes(nodeUrls);
   input.value = '';
@@ -415,7 +415,7 @@ function addNode() {
 }
 
 function removeNode(i) {
-  if(nodeUrls.length<=1) { showToast('Need at least 1 node','error'); return; }
+  if(nodeUrls.length<=1) { showToast('至少保留 1 个节点','error'); return; }
   nodeUrls.splice(i,1);
   saveNodes(nodeUrls);
   nodesData.splice(i,1);
@@ -456,7 +456,7 @@ async function doSearch() {
       // Try fetch from API
       const res = await apiGet(nodeUrls[0], '/api/v1/blocks/'+n);
       if(res?.data) { showBlockDetail(res.data); el.textContent=''; el.style.color=''; }
-      else { el.textContent='Block #'+n+' not found'; el.style.color='#ef4444'; }
+      else { el.textContent='Block #'+n+' 未找到'; el.style.color='#ef4444'; }
     }
     return;
   }
@@ -492,7 +492,7 @@ async function lookupAddress() {
 
   const el = document.getElementById('addrHistory');
   if(!histRes||!histRes.transactions||histRes.transactions.length===0) {
-    el.innerHTML='<div style="color:var(--text-muted);text-align:center;padding:15px;font-style:italic;font-size:10px;">No transactions found for this address</div>';
+    el.innerHTML='<div style="color:var(--text-muted);text-align:center;padding:15px;font-style:italic;font-size:10px;">该地址暂无交易记录</div>';
     return;
   }
   el.innerHTML = histRes.transactions.reverse().map(tx=>{
@@ -509,7 +509,7 @@ async function lookupAddress() {
     </div>`;
   }).join('');
   document.getElementById('addrTxCount').textContent = '('+histRes.count+' tx)';
-  document.getElementById('searchResult').textContent = histRes.count+' transaction(s) found';
+  document.getElementById('searchResult').textContent = histRes.count+' 笔交易';
   document.getElementById('searchResult').style.color = 'var(--text-muted)';
 }
 
@@ -530,7 +530,7 @@ async function poll() {
     // Update status dots
     nodeUrls.forEach((_,i)=>{
       const dot = document.getElementById('multiDot'+i);
-      if(dot) dot.classList.toggle('offline', !nodesData[i]?.online);
+      if(dot) dot.classList.toggle('离线', !nodesData[i]?.online);
     });
     updateMultiView();
   }
@@ -543,15 +543,15 @@ function updateSingleView() {
   const d = nodesData[0];
   const loading = !d;
   if(loading) {
-    ['sHeight','sTxCount','sDifficulty','sPending','sPeers'].forEach(id=>document.getElementById(id).textContent='···');
+    ['sHeight','sTxCount','sDifficulty','sPending','sSupplyStat'].forEach(id=>document.getElementById(id).textContent='···');
     document.getElementById('blockList0').innerHTML='<div style="color:var(--text-muted);text-align:center;padding:40px;font-size:18px;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
     document.getElementById('pendingList0').innerHTML='<div style="color:var(--text-muted);text-align:center;padding:20px;font-size:14px;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
     document.getElementById('pendingBadge0').textContent='···';
     return;
   }
   if(!d.online) {
-    ['sHeight','sTxCount','sDifficulty','sPending','sPeers'].forEach(id=>document.getElementById(id).textContent='offline');
-    document.getElementById('blockList0').innerHTML='<div style="color:var(--text-muted);text-align:center;padding:40px;font-style:italic;">API offline — start with: python -m gamla_chain</div>';
+    ['sHeight','sTxCount','sDifficulty','sPending','sSupplyStat'].forEach(id=>document.getElementById(id).textContent='离线');
+    document.getElementById('blockList0').innerHTML='<div style="color:var(--text-muted);text-align:center;padding:40px;font-style:italic;">API 离线 — 请启动: python -m gamla_chain</div>';
     document.getElementById('pendingList0').innerHTML='<div style="color:var(--text-muted);text-align:center;padding:20px;font-style:italic;">--</div>';
     document.getElementById('pendingBadge0').textContent='0';
     return;
@@ -565,7 +565,6 @@ function updateSingleView() {
   document.getElementById('sTxCount').textContent = fmt(totalTx);
   document.getElementById('sDifficulty').textContent = d.difficulty;
   document.getElementById('sPending').textContent = fmt(d.pending_count);
-  document.getElementById('sPeers').textContent = (d.nodes?.length||0)+' node(s)';
   document.getElementById('sNodeId').textContent = shortHash(d.node_id);
   document.getElementById('sReward').textContent = fmt(d.reward,1)+' GLC';
   document.getElementById('sPeerList').textContent = d.nodes?.length ? d.nodes.join(', ') : 'none';
@@ -590,7 +589,7 @@ function renderBlockList(elId, d) {
   const el = document.getElementById(elId);
   if(!el) return;
   const st = el.scrollTop;
-  if(!d||!d.online||!d.chain.length) { el.innerHTML='<div style="color:var(--text-muted);text-align:center;padding:30px;font-style:italic;">No blocks</div>'; return; }
+  if(!d||!d.online||!d.chain.length) { el.innerHTML='<div style="color:var(--text-muted);text-align:center;padding:30px;font-style:italic;">暂无区块</div>'; return; }
     const newThreshold = lastBlockIdx;
   lastBlockIdx = (d.chain[d.chain.length-1]||{}).index||0;
   el.innerHTML = [...d.chain].reverse().map(b=>`
@@ -613,7 +612,7 @@ function renderPendingList(elId, d, badgeId) {
   document.getElementById(badgeId).textContent = d?.pending_count||0;
   const el = document.getElementById(elId);
   if(!d||!d.online||!d.pending||d.pending.length===0) {
-    el.innerHTML='<div style="color:var(--text-muted);text-align:center;padding:20px;font-style:italic;font-size:11px;">No pending TXs</div>'; return;
+    el.innerHTML='<div style="color:var(--text-muted);text-align:center;padding:20px;font-style:italic;font-size:11px;">无待打包交易</div>'; return;
   }
   el.innerHTML = d.pending.slice(0,15).map(tx=>`
     <div class="tx-item" onclick="showTxDetail(${esc(tx)})" style="padding:8px 10px;">
@@ -692,10 +691,10 @@ function updateMultiView() {
   const cs = document.getElementById('consensusStatus');
   if(allReg) {
     const lengths = nodesData.map(d=>d?.length||0);
-    cs.textContent = 'Mesh registered | Longest chain: Node '+lengths.indexOf(Math.max(...lengths))+' ('+Math.max(...lengths)+' blocks)';
+    cs.textContent = '网格已注册 | 最长链: 节点'+lengths.indexOf(Math.max(...lengths))+' ('+Math.max(...lengths)+' 个区块)';
     cs.style.color='#4ade80';
   } else {
-    cs.textContent = 'Not all nodes registered — click "Register All (Mesh)"';
+    cs.textContent = '节点未全部注册 — click "全部注册 (网格)"';
     cs.style.color='var(--text-muted)';
   }
 
@@ -706,12 +705,12 @@ function updateMultiView() {
 
   grid.innerHTML = nodeUrls.map((url,i)=>{
     const d = nodesData[i];
-    if(!d||!d.online) return `<div class="glass p-4"><h2 class="font-display text-xs font-semibold uppercase mb-2" style="color:${nodeColor(i)};"><i class="fa-solid fa-server mr-1.5"></i>Node ${i}</h2><div style="color:#ef4444;text-align:center;padding:30px;"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>${d?._error?'Timeout / unreachable':'Offline'} — ${url}</div><div style="color:var(--text-muted);text-align:center;font-size:10px;">Check that the server is running and reachable</div></div>`;
+    if(!d||!d.online) return `<div class="glass p-4"><h2 class="font-display text-xs font-semibold uppercase mb-2" style="color:${nodeColor(i)};"><i class="fa-solid fa-server mr-1.5"></i>Node ${i}</h2><div style="color:#ef4444;text-align:center;padding:30px;"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>${d?._error?'超时 / 无法连接':'Offline'} — ${url}</div><div style="color:var(--text-muted);text-align:center;font-size:10px;">请检查服务器是否在运行且网络可达</div></div>`;
     return `<div class="glass p-4 flex flex-col" style="min-height:360px;">
       <div class="flex items-center justify-between mb-2">
         <h2 class="font-display text-[11px] font-semibold uppercase" style="color:${nodeColor(i)};"><i class="fa-solid fa-server mr-1.5"></i>Node ${i}</h2>
         <div class="flex gap-1">
-          <button class="btn-outline btn-sm" onclick="mineOnNode(${i})"><i class="fa-solid fa-hammer mr-1"></i>Mine</button>
+          <button class="btn-outline btn-sm" onclick="mineOnNode(${i})"><i class="fa-solid fa-hammer mr-1"></i>挖矿</button>
         </div>
       </div>
       <h3 class="font-display text-[10px] font-semibold uppercase mb-1.5" style="color:var(--text-muted);">Blocks</h3>
@@ -736,7 +735,7 @@ function updateMultiView() {
   chartGrid.style.gridTemplateColumns = 'repeat('+chartCols+',1fr)';
   chartGrid.innerHTML = chartNodes.map((_,i)=>`
     <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:${nodeColor(i)};"><i class="fa-solid fa-chart-line mr-1"></i>Node ${i} — Block Time</h2><div class="chart-wrap"><canvas id="multiChartBT${i}"></canvas></div></div>
-    <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:${nodeColor(i)};"><i class="fa-solid fa-chart-bar mr-1"></i>Node ${i} — TX per Block</h2><div class="chart-wrap"><canvas id="multiChartTX${i}"></canvas></div></div>
+    <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:${nodeColor(i)};"><i class="fa-solid fa-chart-bar mr-1"></i>Node ${i} — 每块交易数</h2><div class="chart-wrap"><canvas id="multiChartTX${i}"></canvas></div></div>
   `).join('');
 }
 
@@ -747,10 +746,10 @@ function getNodeUrl(idx) { return nodeUrls[idx]||nodeUrls[0]; }
 
 async function mineOnNode(idx) {
   const url = getNodeUrl(idx);
-  showToast('<i class="fa-solid fa-spinner fa-spin mr-2"></i>Mining on Node '+idx+'...','info');
+  showToast('<i class="fa-solid fa-spinner fa-spin mr-2"></i>正在节点 '+idx+'...','info');
   const res = await apiPost(url,'/api/v1/mine?miner_address=explorer');
-  if(res) showToast('<i class="fa-solid fa-check-circle mr-2"></i>Block <b>#'+res.data?.index+'</b> mined on Node '+idx+'!','success');
-  else showToast('<i class="fa-solid fa-triangle-exclamation mr-2"></i>Mine failed — Node '+idx+' offline?','error');
+  if(res) showToast('<i class="fa-solid fa-check-circle mr-2"></i>Block <b>#'+res.data?.index+'</b> 已出块 — 节点'+idx+'!','success');
+  else showToast('<i class="fa-solid fa-triangle-exclamation mr-2"></i>挖矿失败 — 节点'+idx+' offline?','error');
   poll();
 }
 
@@ -759,34 +758,34 @@ async function sendTx(idx) {
   const sender = document.getElementById('txSender').value.trim();
   const receiver = document.getElementById('txReceiver').value.trim();
   const amount = parseFloat(document.getElementById('txAmount').value);
-  if(!sender||!receiver||isNaN(amount)||amount<=0) { showToast('Fill all fields','error'); return; }
-  showToast('<i class="fa-solid fa-spinner fa-spin mr-2"></i>Broadcasting TX...','info');
+  if(!sender||!receiver||isNaN(amount)||amount<=0) { showToast('请填写完整信息','error'); return; }
+  showToast('<i class="fa-solid fa-spinner fa-spin mr-2"></i>交易广播中...','info');
   const res = await apiPost(url,'/api/v1/transactions',{sender,receiver,amount,timestamp:Date.now()/1000,tx_hash:''});
-  if(res) { showToast('<i class="fa-solid fa-check-circle mr-2"></i>TX sent to Node '+idx,'success');
+  if(res) { showToast('<i class="fa-solid fa-check-circle mr-2"></i>交易已发送 — 节点'+idx,'success');
     document.getElementById('txSender').value=''; document.getElementById('txReceiver').value=''; document.getElementById('txAmount').value=''; }
-  else showToast('<i class="fa-solid fa-triangle-exclamation mr-2"></i>TX failed','error');
+  else showToast('<i class="fa-solid fa-triangle-exclamation mr-2"></i>交易发送失败','error');
   poll();
 }
 
 async function registerAllNodes() {
-  showToast('<i class="fa-solid fa-spinner fa-spin mr-2"></i>Registering mesh network...','info');
+  showToast('<i class="fa-solid fa-spinner fa-spin mr-2"></i>正在注册网状网络...','info');
   let ok=0;
   for(let i=0;i<nodeUrls.length;i++) {
     const others = nodeUrls.filter((_,j)=>j!==i);
     const res = await apiPost(nodeUrls[i],'/api/v1/nodes/register',{nodes:others});
     if(res) ok++;
   }
-  showToast('<i class="fa-solid fa-check-circle mr-2"></i>'+ok+'/'+nodeUrls.length+' nodes registered (mesh)','success');
+  showToast('<i class="fa-solid fa-check-circle mr-2"></i>'+ok+'/'+nodeUrls.length+' 个节点已注册 (网格)','success');
   poll();
 }
 
 async function resolveOnSelected() {
   const idx = parseInt(document.getElementById('resolveTarget').value);
   const url = getNodeUrl(idx);
-  showToast('<i class="fa-solid fa-spinner fa-spin mr-2"></i>Resolving consensus on Node '+idx+'...','info');
+  showToast('<i class="fa-solid fa-spinner fa-spin mr-2"></i>正在节点 '+idx+'...','info');
   const res = await apiGet(url,'/api/v1/nodes/resolve');
   if(res) showToast('<i class="fa-solid fa-check-circle mr-2"></i>'+res.message, res.message?.includes('replaced')?'info':'success');
-  else showToast('<i class="fa-solid fa-triangle-exclamation mr-2"></i>Resolve failed','error');
+  else showToast('<i class="fa-solid fa-triangle-exclamation mr-2"></i>共识决议失败','error');
   poll();
 }
 
@@ -816,8 +815,8 @@ function toggleSimulation() {
   document.getElementById('btnSimLabel').textContent = 'Stop';
   document.getElementById('btnSim').querySelector('i').className = 'fa-solid fa-stop mr-1';
   document.getElementById('simStatus').classList.remove('hidden');
-  document.getElementById('simStatus').textContent = 'Starting...';
-  showToast('<i class="fa-solid fa-rocket mr-2"></i>Simulation started on Node '+simNodeIdx+' — TX every 0.17-1s, Block every 0.83s','info');
+  document.getElementById('simStatus').textContent = '启动中...';
+  showToast('<i class="fa-solid fa-rocket mr-2"></i>模拟交易已启动 — 节点'+simNodeIdx+' — TX间隔0.17-1s, 出块间隔0.83s','info');
   scheduleTx();
   scheduleBlock();
 }
@@ -831,7 +830,7 @@ function stopSimulation() {
   document.getElementById('btnSim').querySelector('i').className = 'fa-solid fa-play mr-1';
   document.getElementById('simStatus').classList.add('hidden');
   const elapsed = ((Date.now()-simStartTime)/1000).toFixed(0);
-  showToast('<i class="fa-solid fa-flag-checkered mr-2"></i>Simulation stopped — '+simTxCount+' TXs, '+simBlockCount+' blocks in '+elapsed+'s','info');
+  showToast('<i class="fa-solid fa-flag-checkered mr-2"></i>模拟交易已停止 — '+simTxCount+' 笔交易, '+simBlockCount+' 个区块, 耗时'+elapsed+'s','info');
 }
 
 function scheduleTx() {
@@ -880,14 +879,14 @@ function showBlockDetail(block) {
       </div>
       <button class="btn-outline text-xs" onclick="closeModalDirect()"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div class="detail-row"><span class="detail-label">Hash</span><span class="detail-value">${block.hash}</span></div>
-    <div class="detail-row"><span class="detail-label">Previous</span><span class="detail-value">${shortHash(block.previous_hash)}</span></div>
-    <div class="detail-row"><span class="detail-label">Timestamp</span><span class="detail-value">${new Date(block.timestamp*1000).toLocaleString()}</span></div>
-    <div class="detail-row"><span class="detail-label">Nonce</span><span class="detail-value">${block.nonce}</span></div>
-    <div class="detail-row"><span class="detail-label">Transactions</span><span class="detail-value">${block.transactions?.length||0} tx</span></div>
-    <div class="detail-row"><span class="detail-label">Confirmations</span><span class="detail-value" style="color:#4ade80;">${confirms}</span></div>
-    <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value"><span class="badge badge-success">Finalized</span></span></div>
-    ${block.transactions?.length?`<div class="mt-3"><h3 class="font-display text-xs font-semibold mb-2" style="color:var(--text-muted);">Transactions</h3>${block.transactions.map(tx=>`<div class="detail-row" style="cursor:pointer;" onclick="showTxDetail(${esc(tx)})"><span class="detail-label" style="font-size:10px;">${tx.sender==='network'?'🏆 Coinbase':shortHash(tx.tx_hash||'')}</span><span class="detail-value" style="font-size:10px;color:${tx.sender==='network'?'#4ade80':'var(--text-primary)'};">${fmt(tx.amount,4)} GLC</span></div>`).join('')}</div>`:''}
+    <div class="detail-row"><span class="detail-label">哈希</span><span class="detail-value">${block.hash}</span></div>
+    <div class="detail-row"><span class="detail-label">前块哈希</span><span class="detail-value">${shortHash(block.previous_hash)}</span></div>
+    <div class="detail-row"><span class="detail-label">时间戳</span><span class="detail-value">${new Date(block.timestamp*1000).toLocaleString()}</span></div>
+    <div class="detail-row"><span class="detail-label">随机数</span><span class="detail-value">${block.nonce}</span></div>
+    <div class="detail-row"><span class="detail-label">交易数</span><span class="detail-value">${block.transactions?.length||0} tx</span></div>
+    <div class="detail-row"><span class="detail-label">确认数</span><span class="detail-value" style="color:#4ade80;">${confirms}</span></div>
+    <div class="detail-row"><span class="detail-label">状态</span><span class="detail-value"><span class="badge badge-success">已确认</span></span></div>
+    ${block.transactions?.length?`<div class="mt-3"><h3 class="font-display text-xs font-semibold mb-2" style="color:var(--text-muted);">Transactions</h3>${block.transactions.map(tx=>`<div class="detail-row" style="cursor:pointer;" onclick="showTxDetail(${esc(tx)})"><span class="detail-label" style="font-size:10px;">${tx.sender==='network'?'🏆 矿工奖励':shortHash(tx.tx_hash||'')}</span><span class="detail-value" style="font-size:10px;color:${tx.sender==='network'?'#4ade80':'var(--text-primary)'};">${fmt(tx.amount,4)} GLC</span></div>`).join('')}</div>`:''}
   `;
   document.getElementById('modalOverlay').style.display='flex';
 }
@@ -902,15 +901,15 @@ async function navigateBlock(index) {
 function showTxDetail(tx) {
   document.getElementById('modalContent').innerHTML = `
     <div class="flex items-center justify-between mb-3">
-      <h2 class="font-display text-sm font-bold" style="color:var(--accent-pink);">Transaction</h2>
+      <h2 class="font-display text-sm font-bold" style="color:var(--accent-pink);">交易详情</h2>
       <button class="btn-outline text-xs" onclick="closeModalDirect()"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div class="detail-row"><span class="detail-label">Hash</span><span class="detail-value">${tx.tx_hash||tx.hash||'--'}</span></div>
-    <div class="detail-row"><span class="detail-label">From</span><span class="detail-value">${tx.sender}</span></div>
-    <div class="detail-row"><span class="detail-label">To</span><span class="detail-value">${tx.receiver}</span></div>
-    <div class="detail-row"><span class="detail-label">Amount</span><span class="detail-value" style="color:#4ade80;">${fmt(tx.amount,4)} GLC</span></div>
-    <div class="detail-row"><span class="detail-label">Time</span><span class="detail-value">${tx.timestamp?new Date(tx.timestamp*1000).toLocaleString():'--'}</span></div>
-    <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value"><span class="badge badge-pending">Pending</span></span></div>
+    <div class="detail-row"><span class="detail-label">哈希</span><span class="detail-value">${tx.tx_hash||tx.hash||'--'}</span></div>
+    <div class="detail-row"><span class="detail-label">发送方</span><span class="detail-value">${tx.sender}</span></div>
+    <div class="detail-row"><span class="detail-label">接收方</span><span class="detail-value">${tx.receiver}</span></div>
+    <div class="detail-row"><span class="detail-label">金额</span><span class="detail-value" style="color:#4ade80;">${fmt(tx.amount,4)} GLC</span></div>
+    <div class="detail-row"><span class="detail-label">时间</span><span class="detail-value">${tx.timestamp?new Date(tx.timestamp*1000).toLocaleString():'--'}</span></div>
+    <div class="detail-row"><span class="detail-label">状态</span><span class="detail-value"><span class="badge badge-pending">待确认</span></span></div>
   `;
   document.getElementById('modalOverlay').style.display='flex';
 }

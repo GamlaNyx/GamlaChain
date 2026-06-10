@@ -1,0 +1,31 @@
+(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[3340],{8532:(e,t,r)=>{e.exports=r(75631)("toUpperCase")},10239:(e,t,r)=>{var a=r(67895),n=r(27136),o=r(36827),s=r(13051),i=r(65048),l=Math.max;e.exports=function(e,t,r,u){e=n(e)?e:i(e),r=r&&!u?s(r):0;var c=e.length;return r<0&&(r=l(c+r,0)),o(e)?r<=c&&e.indexOf(t,r)>-1:!!c&&a(e,t,r)>-1}},11220:e=>{var t="\\ud800-\\udfff",r="[\\u0300-\\u036f\\ufe20-\\ufe2f\\u20d0-\\u20ff]",a="\\ud83c[\\udffb-\\udfff]",n="[^"+t+"]",o="(?:\\ud83c[\\udde6-\\uddff]){2}",s="[\\ud800-\\udbff][\\udc00-\\udfff]",i="(?:"+r+"|"+a+")?",l="[\\ufe0e\\ufe0f]?",u="(?:\\u200d(?:"+[n,o,s].join("|")+")"+l+i+")*",c=RegExp(a+"(?="+a+")|"+("(?:"+[n+r+"?",r,o,s,"["+t+"]"].join("|"))+")"+(l+i+u),"g");e.exports=function(e){return e.match(c)||[]}},19204:e=>{e.exports=function(e,t,r){var a=-1,n=e.length;t<0&&(t=-t>n?0:n+t),(r=r>n?n:r)<0&&(r+=n),n=t>r?0:r-t>>>0,t>>>=0;for(var o=Array(n);++a<n;)o[a]=e[a+t];return o}},21854:(e,t,r)=>{var a=r(19204);e.exports=function(e,t,r){var n=e.length;return r=void 0===r?n:r,!t&&r>=n?e:a(e,t,r)}},50250:(e,t,r)=>{"use strict";r.d(t,{A:()=>s});var a=r(22369),n=r.n(a),o=r(14662);class s extends o.UpploadService{constructor(e,t){super(),this.name="GIPHY",this.icon='<?xml version="1.0" encoding="UTF-8"?> <svg aria-hidden="true" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"><g fill-rule="nonzero" fill="none"><path fill="#000" d="M54 29h149v198H54z"></path><path fill="#04FF8E" d="M24 22h30v212H24z"></path><path fill="#8E2EFF" d="M203 80h30v154h-30z"></path><path fill="#00C5FF" d="M24 227h209v29H24z"></path><path fill="#FFF152" d="M24 0h119v29H24z"></path><path fill="#FF5B5B" d="M203 59V29h-30V0h-30v88h90V59"></path><path fill="#551C99" d="M203 117V88h30"></path><path fill="#999131" d="M143 0v29h-29"></path></g></svg>',this.color="#34495e",this.template=e=>`
+      <div class="search-container">
+        <h2 class="black">
+            <img 
+              src="https://hackernoon.imgix.net/images/PoweredBy_200_Horizontal_Light-Backgrounds_With_Logo.gif"
+              width="200px"
+              height="42px"
+              alt="Powered by Giphy"
+            />
+        </h2>
+        <form class="search-search-form">
+          <input
+            class="search-search-input"
+            placeholder="search"
+          />
+          <button type="submit">Submit</button>
+        </form>
+
+        <div class="image-grid"></div>
+
+      </div>
+      <div class="uppload-loader search-loader">
+        <div></div>
+        <p>
+          This ought to be good...
+        </p>
+      </div>
+    `,this.handlers=e=>{let t=e.uppload.container.querySelector(".search-search-form");if(t&&(0,o.safeListen)(t,"submit",t=>{this.loading=!0;let r=e.uppload.container.querySelector(".search-loader"),a=e.uppload.container.querySelector(".search-container");a&&(a.style.display=this.loading?"none":""),r&&(r.style.display=this.loading?"flex":"none");let o=e.uppload.container.querySelector(".search-search-input"),s=e.uppload.container.querySelector("#model");if(s&&s.value,o){let t=o.value;n().auth().currentUser.getIdToken().then(r=>{fetch(`https://us-central1-hackernoon-app.cloudfunctions.net/generateImage?query=${t}`,{mode:"cors",headers:{Authorization:`Bearer ${r}`,"Content-Type":"application/json"}}).then(e=>(this.loading=!1,e.json())).then(t=>{t.message&&e.handle(Error(t.message)),this.results=t,this.update(e)}).catch(t=>{e.handle(Error(t.message))})})}return t.preventDefault(),!1}),!this.results)return;let r=this.results,a=e.uppload.container.querySelector(".image-grid");a&&r&&(a.innerHTML=r.map(e=>this.getResult(e)).join("\n")),e.uppload.container.querySelectorAll(".result").forEach((t,r)=>{(0,o.safeListen)(t,"click",async()=>{let t=this.results[r];await this.upload(t,e)})})},this.state=t}update(e){e&&this.handlers(e);let t=e.uppload.container.querySelector(".search-loader"),r=e.uppload.container.querySelector(".search-container");r&&(r.style.display=this.loading?"none":""),t&&(t.style.display=this.loading?"flex":"none")}getResult(e){return`
+      <div class="result">
+        <img class="small" src=${e.replace("giphy.gif/","")}/200w.gif?cid=5fb67740mfsjwy6qntexswcow4x61kszyngwi4hmoxpd11t5&rid=200w.gif&ct=g></img>
+      </div>`}async upload(e,t){var r,a;let n=await fetch(e),o=await n.blob();t.next((r=((e,t=null,r=null,a=null)=>({name:t,blob:e,lastModified:a,type:"gif"}))(o),a=this.name,r.name=`${a}-import-${e.split("https://i.giphy.com/media/")[1].replace("/giphy.gif","")}`,r.url=e,r))}}},51480:e=>{var t=RegExp("[\\u200d\\ud800-\\udfff\\u0300-\\u036f\\ufe20-\\ufe2f\\u20d0-\\u20ff\\ufe0e\\ufe0f]");e.exports=function(e){return t.test(e)}},65048:(e,t,r)=>{var a=r(70368),n=r(69750);e.exports=function(e){return null==e?[]:a(e,n(e))}},70368:(e,t,r)=>{var a=r(59930);e.exports=function(e,t){return a(t,function(t){return e[t]})}},75631:(e,t,r)=>{var a=r(21854),n=r(51480),o=r(82180),s=r(12438);e.exports=function(e){return function(t){var r=n(t=s(t))?o(t):void 0,i=r?r[0]:t.charAt(0),l=r?a(r,1).join(""):t.slice(1);return i[e]()+l}}},80138:(e,t,r)=>{"use strict";r.d(t,{A:()=>c});var a=r(22369),n=r.n(a);r(23574);var o=r(38162),s=r.n(o),i=r(99659),l=r(8145),u=r.n(l);let c=(e,t,r)=>new Promise((a,o)=>{let l="image/gif"==e.type,c=`${r}-${s().slug()}.${i.extension(e.type)}`,h=n().storage().ref("images").child(c).put(e);h.on("state_changed",e=>{let r=e.bytesTransferred/e.totalBytes*100;t&&t(r)},e=>(console.log("Got error",e),o(Error("unable_to_upload"))),()=>{h.snapshot.ref.getDownloadURL().then(async e=>{let t="/"+decodeURIComponent(new URL(e).pathname.split("/").pop().split("?")[0]),r=`https://cdn.hackernoon.com${t}${l?".webp":""}`;if(l){let e=0,t=async function(e,t,r){let n=await e();for(;t(n);)await a(r),n=await e();return n},a=function(e=1e3){return new Promise(t=>{setTimeout(t,e)})},n=async()=>(e+=1,u().head(r).catch(e=>{console.log(e)}));await t(n,t=>!(e>80)&&t?.status!==200,700)}a(r)}).catch(e=>{console.error(e),o(Error("unable_to_upload"))})})})},82180:(e,t,r)=>{var a=r(84204),n=r(51480),o=r(11220);e.exports=function(e){return n(e)?o(e):a(e)}},84204:e=>{e.exports=function(e){return e.split("")}}}]);

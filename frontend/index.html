@@ -102,6 +102,8 @@ body { font-family:'DM Sans',sans-serif; background:#1a1a2e; color:var(--text-pr
 
 .block-item,.tx-item { background:rgba(255,255,255,0.03); border:1px solid transparent; border-radius:10px; padding:10px 12px; margin-bottom:5px; cursor:pointer; transition:all 0.25s ease; }
 .block-item:hover,.tx-item:hover { background:rgba(255,255,255,0.07); border-color:var(--glass-border); }
+@keyframes newBlockGlow { 0%{border-color:var(--accent-cyan);box-shadow:0 0 16px rgba(0,212,255,0.4);background:rgba(0,212,255,0.1);} 100%{border-color:transparent;box-shadow:none;background:rgba(255,255,255,0.03);} }
+.block-item.new-block { animation:newBlockGlow 2s ease-out; }
 
 .badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; letter-spacing:0.4px; }
 .badge-success { background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.25); }
@@ -186,18 +188,11 @@ body { font-family:'DM Sans',sans-serif; background:#1a1a2e; color:var(--text-pr
 <div id="viewSingle" class="pt-14 relative z-10">
   <!-- Stats Row -->
   <div class="px-5 pt-4 grid grid-cols-5 gap-3" id="statsRowA">
-    <div class="stat-card animate-in stagger-1"><div class="text-[10px] uppercase tracking-wider mb-0.5" style="color:var(--text-muted)">Block Height</div><div class="text-xl font-display font-bold" style="color:var(--accent-cyan)" id="sHeight">--</div></div>
+    <div class="stat-card animate-in stagger-1"><div class="text-[10px] uppercase tracking-wider mb-0.5" style="color:var(--text-muted)">Block Height</div><div class="text-xl font-display font-bold" style="color:var(--accent-cyan)"><span id="sHeight">--</span><span class="text-[10px] font-body ml-1.5" style="color:var(--text-muted);" id="sHeightDelta"></span></div></div>
     <div class="stat-card animate-in stagger-2"><div class="text-[10px] uppercase tracking-wider mb-0.5" style="color:var(--text-muted)">Total TXs</div><div class="text-xl font-display font-bold" style="color:var(--accent-blue)" id="sTxCount">--</div></div>
     <div class="stat-card animate-in stagger-3"><div class="text-[10px] uppercase tracking-wider mb-0.5" style="color:var(--text-muted)">Difficulty</div><div class="text-xl font-display font-bold" style="color:var(--accent-purple)" id="sDifficulty">--</div></div>
     <div class="stat-card animate-in stagger-4"><div class="text-[10px] uppercase tracking-wider mb-0.5" style="color:var(--text-muted)">Pending Pool</div><div class="text-xl font-display font-bold" style="color:var(--accent-pink)" id="sPending">--</div></div>
-    <div class="stat-card animate-in stagger-5"><div class="text-[10px] uppercase tracking-wider mb-0.5" style="color:var(--text-muted)">Peers</div><div class="text-xl font-display font-bold" style="color:#22c55e" id="sPeers">--</div></div>
-  </div>
-
-  <!-- Search bar -->
-  <div class="px-5 pt-2 flex items-center gap-2">
-    <input class="glass-input" type="text" id="searchInput" placeholder="Block height (#42) or address (0x...)" style="font-size:11px;padding:6px 12px;max-width:420px;" onkeydown="if(event.key==='Enter')doSearch()">
-    <button class="btn-outline btn-sm" onclick="doSearch()"><i class="fa-solid fa-search mr-1"></i>Search</button>
-    <span class="text-[10px] ml-2" style="color:var(--text-muted);" id="searchResult"></span>
+    <div class="stat-card animate-in stagger-5"><div class="text-[10px] uppercase tracking-wider mb-0.5" style="color:var(--text-muted)">Total Supply</div><div class="text-xl font-display font-bold" style="color:#4ade80" id="sSupplyStat">--</div></div>
   </div>
 
   <!-- 3-col layout -->
@@ -207,12 +202,17 @@ body { font-family:'DM Sans',sans-serif; background:#1a1a2e; color:var(--text-pr
         <h2 class="font-display text-xs font-semibold uppercase tracking-wider" style="color:var(--text-primary);"><i class="fa-solid fa-cube mr-1.5" style="color:var(--accent-cyan)"></i>Blocks</h2>
         <button class="btn-outline btn-sm" onclick="mineOnNode(0)"><i class="fa-solid fa-hammer mr-1"></i>Mine</button>
       </div>
+      <div class="flex items-center gap-1 mb-2">
+        <input class="glass-input" type="text" id="searchInput" placeholder="#height or 0x..." style="font-size:10px;padding:5px 8px;flex:1;" onkeydown="if(event.key==='Enter')doSearch()">
+        <button class="btn-outline btn-sm" onclick="doSearch()" style="padding:5px 8px;"><i class="fa-solid fa-search"></i></button>
+      </div>
+      <span class="text-[9px] mb-1.5" style="color:var(--text-muted);" id="searchResult"></span>
       <div class="scroll-list flex-1" id="blockList0"></div>
     </div>
 
     <div class="flex flex-col gap-3 animate-in stagger-2">
       <div class="glass p-4">
-        <h2 class="font-display text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--text-primary);"><i class="fa-solid fa-paper-plane mr-1.5" style="color:var(--accent-pink)"></i>New Transaction</h2>
+        <div class="flex items-center justify-between mb-2"><h2 class="font-display text-xs font-semibold uppercase tracking-wider" style="color:var(--text-primary);"><i class="fa-solid fa-paper-plane mr-1.5" style="color:var(--accent-pink)"></i>New Transaction</h2><button class="btn-outline btn-sm" onclick="quickFillTx()" title="Random fill" style="padding:3px 8px;font-size:9px;"><i class="fa-solid fa-shuffle mr-1"></i>Fill</button></div>
         <div class="grid grid-cols-2 gap-2 mb-2">
           <input class="glass-input" type="text" id="txSender" placeholder="Sender address" style="font-size:11px;padding:7px 10px;">
           <input class="glass-input" type="text" id="txReceiver" placeholder="Receiver address" style="font-size:11px;padding:7px 10px;">
@@ -234,42 +234,36 @@ body { font-family:'DM Sans',sans-serif; background:#1a1a2e; color:var(--text-pr
     <div class="flex flex-col gap-3 animate-in stagger-3 charts-col">
       <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-chart-line mr-1" style="color:var(--accent-cyan)"></i>Block Time (s)</h2><div class="chart-wrap"><canvas id="chartBlockTime"></canvas></div></div>
       <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-chart-bar mr-1" style="color:var(--accent-purple)"></i>TX per Block</h2><div class="chart-wrap"><canvas id="chartTxCount"></canvas></div></div>
-      <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-chart-pie mr-1" style="color:var(--accent-pink)"></i>TX Pool</h2><div class="chart-wrap"><canvas id="chartTxPie"></canvas></div></div>
+      <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-weight-hanging mr-1" style="color:var(--accent-purple)"></i>Block Size (KB)</h2><div class="chart-wrap"><canvas id="chartBlockSize"></canvas></div></div>
     </div>
   </div>
 
-  <div class="px-5 pb-6 grid grid-cols-3 gap-3 animate-in stagger-4">
-    <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-weight-hanging mr-1" style="color:var(--accent-purple)"></i>Block Size (KB)</h2><div class="chart-wrap"><canvas id="chartBlockSize"></canvas></div></div>
+  <div class="px-5 pb-2 grid grid-cols-3 gap-3 animate-in stagger-4">
+    <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-chart-pie mr-1" style="color:var(--accent-pink)"></i>TX Pool</h2><div class="chart-wrap"><canvas id="chartTxPie"></canvas></div></div>
     <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-check-circle mr-1" style="color:#22c55e"></i>Chain Valid</h2><div class="chart-wrap"><canvas id="chartValid"></canvas></div></div>
     <div class="glass p-3 flex flex-col">
-      <div class="flex items-center gap-1 mb-2" style="background:rgba(255,255,255,0.04);border-radius:6px;padding:1.5px;">
-        <button class="btn-outline active btn-sm tab-btn" onclick="switchInfoTab('chain')" id="tabChain" style="padding:3px 10px;font-size:10px;">Chain Info</button>
-        <button class="btn-outline btn-sm tab-btn" onclick="switchInfoTab('address')" id="tabAddress" style="padding:3px 10px;font-size:10px;"><i class="fa-solid fa-wallet mr-1"></i>Address</button>
+      <h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-2" style="color:var(--text-muted)"><i class="fa-solid fa-wallet mr-1" style="color:var(--accent-cyan)"></i>Address Explorer</h2>
+      <div class="flex gap-1.5 mb-2">
+        <input class="glass-input" type="text" id="addrInput" placeholder="Paste address (0x...)" style="font-size:10px;padding:5px 8px;flex:1;" onkeydown="if(event.key==='Enter')lookupAddress()">
+        <button class="btn-cyan btn-sm" onclick="lookupAddress()" style="padding:5px 10px;font-size:10px;">Lookup</button>
       </div>
-      <!-- Chain Info tab -->
-      <div id="panelChainInfo">
-        <div class="detail-row"><span class="detail-label">Chain ID</span><span class="detail-value" style="font-size:10px;">gamla-8848</span></div>
-        <div class="detail-row"><span class="detail-label">Consensus</span><span class="detail-value" style="font-size:10px;">PoW (SHA-256)</span></div>
-        <div class="detail-row"><span class="detail-label">Total Supply</span><span class="detail-value" style="font-size:10px;color:#4ade80;" id="sSupply">--</span></div>
-        <div class="detail-row"><span class="detail-label">Avg Block Time</span><span class="detail-value" style="font-size:10px;" id="sAvgTime">--</span></div>
-        <div class="detail-row"><span class="detail-label">Node ID</span><span class="detail-value" style="font-size:10px;" id="sNodeId">--</span></div>
-        <div class="detail-row"><span class="detail-label">Reward</span><span class="detail-value" style="font-size:10px;" id="sReward">--</span></div>
-        <div class="detail-row"><span class="detail-label">Peers</span><span class="detail-value" style="font-size:10px;" id="sPeerList">--</span></div>
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-[10px]" style="color:var(--text-muted);">Balance:</span>
+        <span class="font-display text-sm font-bold" style="color:#4ade80;" id="addrBalance">--</span>
       </div>
-      <!-- Address Explorer tab -->
-      <div id="panelAddress" class="hidden flex flex-col flex-1">
-        <div class="flex gap-1.5 mb-2">
-          <input class="glass-input" type="text" id="addrInput" placeholder="Paste address (0x...)" style="font-size:10px;padding:5px 8px;flex:1;" onkeydown="if(event.key==='Enter')lookupAddress()">
-          <button class="btn-cyan btn-sm" onclick="lookupAddress()" style="padding:5px 10px;font-size:10px;">Lookup</button>
-        </div>
-        <div class="flex items-center justify-between mb-1.5">
-          <span class="text-[10px]" style="color:var(--text-muted);">Balance:</span>
-          <span class="font-display text-sm font-bold" style="color:#4ade80;" id="addrBalance">--</span>
-        </div>
-        <div class="text-[10px] uppercase tracking-wider mb-1" style="color:var(--text-muted);">Transaction History</div>
-        <div class="scroll-list-sm flex-1" id="addrHistory"><div style="color:var(--text-muted);text-align:center;padding:15px;font-style:italic;font-size:10px;">Enter an address and click Lookup</div></div>
-      </div>
+      <div class="text-[10px] uppercase tracking-wider mb-1" style="color:var(--text-muted);">History <span class="text-[9px] ml-1" style="color:var(--text-muted);" id="addrTxCount"></span></div>
+      <div class="scroll-list-sm flex-1" id="addrHistory"><div style="color:var(--text-muted);text-align:center;padding:15px;font-style:italic;font-size:10px;">Enter an address and click Lookup</div></div>
     </div>
+  </div>
+
+  <!-- Compact chain info bar -->
+  <div class="px-5 pb-4 flex items-center gap-4 text-[10px] flex-wrap" style="color:var(--text-muted);">
+    <span>Chain: <b style="color:var(--text-primary);">gamla-8848</b></span>
+    <span>Consensus: <b style="color:var(--text-primary);">PoW</b></span>
+    <span>Node: <b style="color:var(--text-primary);font-family:JetBrains Mono,monospace;" id="sNodeId">--</b></span>
+    <span>Reward: <b style="color:#4ade80;" id="sReward">--</b></span>
+    <span>Avg Block: <b style="color:var(--text-primary);" id="sAvgTime">--</b></span>
+    <span>Peers: <b style="color:var(--text-primary);" id="sPeerList">none</b></span>
   </div>
 </div>
 
@@ -338,6 +332,8 @@ let nodeUrls = loadNodes();
 let mode = localStorage.getItem('gamla_mode') || 'single';
 // nodeData[i] = { online, chain, length, difficulty, reward, nodes, node_id, pending, pending_count, valid }
 let nodesData = [];
+let lastHeight = 0;
+let lastBlockIdx = 0;
 
 // ============================================================
 // HELPERS
@@ -447,15 +443,6 @@ function renderNodeManager() {
 // ============================================================
 // SEARCH & ADDRESS EXPLORER
 // ============================================================
-let infoTab = 'chain';
-function switchInfoTab(tab) {
-  infoTab = tab;
-  document.getElementById('tabChain').classList.toggle('active', tab==='chain');
-  document.getElementById('tabAddress').classList.toggle('active', tab==='address');
-  document.getElementById('panelChainInfo').classList.toggle('hidden', tab!=='chain');
-  document.getElementById('panelAddress').classList.toggle('hidden', tab!=='address');
-}
-
 async function doSearch() {
   const q = document.getElementById('searchInput').value.trim();
   const el = document.getElementById('searchResult');
@@ -475,7 +462,6 @@ async function doSearch() {
   }
   // Address search
   if(/^0x[a-fA-F0-9]{8,}/.test(q) || q.length>=16) {
-    switchInfoTab('address');
     document.getElementById('addrInput').value = q;
     await lookupAddress();
     el.textContent='';
@@ -483,6 +469,16 @@ async function doSearch() {
   }
   el.textContent='Enter #block_height or address (0x...)';
   el.style.color='var(--text-muted)';
+}
+
+function quickFillTx() {
+  const addrs = ['0xalice_wallet_001','0xbob_wallet_002','0xcharlie_wallet_003','0xdave_wallet_004','0xeve_wallet_005'];
+  const a=addrs[Math.floor(Math.random()*addrs.length)];
+  let b=addrs[Math.floor(Math.random()*addrs.length)];
+  while(b===a) b=addrs[Math.floor(Math.random()*addrs.length)];
+  document.getElementById('txSender').value=a;
+  document.getElementById('txReceiver').value=b;
+  document.getElementById('txAmount').value=(Math.random()*49.9+0.1).toFixed(4);
 }
 
 async function lookupAddress() {
@@ -512,6 +508,7 @@ async function lookupAddress() {
       </div>
     </div>`;
   }).join('');
+  document.getElementById('addrTxCount').textContent = '('+histRes.count+' tx)';
   document.getElementById('searchResult').textContent = histRes.count+' transaction(s) found';
   document.getElementById('searchResult').style.color = 'var(--text-muted)';
 }
@@ -562,6 +559,9 @@ function updateSingleView() {
 
   let totalTx=0; d.chain.forEach(b=>totalTx+=b.transactions?.length||0);
   document.getElementById('sHeight').textContent = fmt(d.length);
+  if(lastHeight>0 && d.length>lastHeight) { document.getElementById('sHeightDelta').textContent = '+'+(d.length-lastHeight); document.getElementById('sHeightDelta').style.color='#4ade80'; }
+  else document.getElementById('sHeightDelta').textContent = '';
+  lastHeight = d.length;
   document.getElementById('sTxCount').textContent = fmt(totalTx);
   document.getElementById('sDifficulty').textContent = d.difficulty;
   document.getElementById('sPending').textContent = fmt(d.pending_count);
@@ -572,7 +572,7 @@ function updateSingleView() {
 
   // Computed stats: total supply (sum of all coinbase: sender='network') + avg block time
   let supply=0; d.chain.forEach(b=>{b.transactions?.forEach(tx=>{if(tx.sender==='network') supply+=tx.amount;});});
-  document.getElementById('sSupply').textContent = fmt(supply,0)+' GLC';
+  document.getElementById('sSupplyStat').textContent = fmt(supply,0)+' GLC';
   if(d.chain.length>=2) {
     let totalTime=0; for(let i=1;i<d.chain.length;i++) totalTime+=Math.max(0,(d.chain[i].timestamp-d.chain[i-1].timestamp));
     document.getElementById('sAvgTime').textContent = (totalTime/(d.chain.length-1)).toFixed(1)+'s';
@@ -591,8 +591,10 @@ function renderBlockList(elId, d) {
   if(!el) return;
   const st = el.scrollTop;
   if(!d||!d.online||!d.chain.length) { el.innerHTML='<div style="color:var(--text-muted);text-align:center;padding:30px;font-style:italic;">No blocks</div>'; return; }
+    const newThreshold = lastBlockIdx;
+  lastBlockIdx = (d.chain[d.chain.length-1]||{}).index||0;
   el.innerHTML = [...d.chain].reverse().map(b=>`
-    <div class="block-item" onclick="showBlockDetail(${esc(b)})">
+    <div class="block-item${b.index>newThreshold?' new-block':''}" onclick="showBlockDetail(${esc(b)})">
       <div class="flex items-center justify-between mb-0.5">
         <span class="font-display text-[11px] font-bold" style="color:var(--accent-cyan);">#${b.index}</span>
         <span class="text-[10px]" style="color:var(--text-muted);">${timeAgo(b.timestamp)}</span>

@@ -1,44 +1,59 @@
 # GamlaChain
 
-A simple blockchain implementation in Python for educational purposes. Built following the [Learn Blockchains by Building One](https://hackernoon.com/learn-blockchains-by-building-one) tutorial, with extended features including multi-node consensus, REST API, and a glassmorphism frontend explorer.
+基于 Python 的区块链教学项目。遵循 [Learn Blockchains by Building One](https://hackernoon.com/learn-blockchains-by-building-one) 教程构建，并扩展了多节点共识、REST API、玻璃拟态前端浏览器等完整功能。
 
-## Features
+## 功能特性
 
-- **Blockchain Core** — Block, Transaction, Wallet with SHA-256 hashing
-- **Proof of Work** — Configurable difficulty, coinbase rewards
-- **Consensus** — Longest-chain rule with multi-node mesh network
-- **REST API** — 11 FastAPI endpoints (Swagger docs at `/docs`)
-- **Frontend Explorer** — Glassmorphism SPA with single / multi-node modes, Chart.js visualizations
-- **Multi-node Support** — Register nodes, resolve conflicts, compare chains side-by-side
+- **区块链核心** — Block、Transaction、Wallet，SHA-256 哈希
+- **工作量证明 (PoW)** — 可配置难度、矿工奖励
+- **共识算法** — 最长链规则 + 多节点网状网络 + 自动同步
+- **REST API** — 11 个 FastAPI 端点（`/docs` 提供 Swagger 文档）
+- **前端浏览器** — 玻璃拟态 SPA，支持单节点/多节点模式、Chart.js 图表、中文界面
+- **区块可视化** — 区块链卡片式展示，点击查看详情
+- **地址浏览器** — 查询余额和交易历史
+- **模拟交易** — 一键自动交易 + 出块，多节点模式下模拟真实区块链行为（TX 广播 → 单节点挖矿 → 自动共识同步）
 
-## Quick Start
+## 快速开始
 
 ```bash
-# Install
+# 安装依赖
 pip install -r requirements.txt
 
-# Run demo
+# 命令行演示
 python scripts/demo.py
 
-# Start API server
+# 启动 API 服务器
 python -m gamla_chain
 # → http://127.0.0.1:8000
 # → Swagger: http://127.0.0.1:8000/docs
 
-# Open frontend explorer
-# Open frontend/index.html in your browser
+# 打开前端浏览器
+# 浏览器打开 frontend/index.html
 ```
 
-## Multi-Node Consensus
+## 多节点共识
+
+多节点模式下模拟真实区块链行为：
+
+```
+TX 广播到所有节点 → 节点 0 挖矿出块 → 其余节点自动共识同步
+                        ↓
+              全网维护同一条链的副本
+```
+
+### 手动操作
 
 ```bash
-# Terminal 1 — Node A
+# 终端 1 — 节点 A (矿工)
 python -m gamla_chain
 
-# Terminal 2 — Node B
+# 终端 2 — 节点 B (同步节点)
 python -m uvicorn gamla_chain.api.server:app --port 8001
 
-# Register nodes (via API or frontend)
+# 终端 3 — 节点 C (可选)
+python -m uvicorn gamla_chain.api.server:app --port 8002
+
+# 注册节点 A ↔ B
 curl -X POST http://127.0.0.1:8000/api/v1/nodes/register \
   -H "Content-Type: application/json" \
   -d '{"nodes": ["http://127.0.0.1:8001"]}'
@@ -47,67 +62,79 @@ curl -X POST http://127.0.0.1:8001/api/v1/nodes/register \
   -H "Content-Type: application/json" \
   -d '{"nodes": ["http://127.0.0.1:8000"]}'
 
-# Mine on Node B to create a longer chain, then resolve on Node A
-curl http://127.0.0.1:8000/api/v1/nodes/resolve
+# 在节点 A 挖矿
+curl -X POST "http://127.0.0.1:8000/api/v1/mine?miner_address=miner"
+
+# 节点 B 同步
+curl http://127.0.0.1:8001/api/v1/nodes/resolve
 ```
 
-## API Endpoints
+### 前端一键操作
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/v1/chain` | Full blockchain data |
-| GET | `/api/v1/blocks/latest` | Latest block |
-| GET | `/api/v1/blocks/{index}` | Block by height |
-| POST | `/api/v1/transactions` | Create transaction |
-| GET | `/api/v1/transactions/pending` | Pending transaction pool |
-| POST | `/api/v1/mine` | Mine a new block |
-| GET | `/api/v1/balance/{address}` | Address balance |
-| GET | `/api/v1/history/{address}` | Transaction history |
-| GET | `/api/v1/validate` | Validate local chain |
-| POST | `/api/v1/nodes/register` | Register neighbour nodes |
-| GET | `/api/v1/nodes/resolve` | Trigger consensus resolution |
+切换到 **多节点** 模式 → 添加节点 URL → 点击 **模拟交易**：
+- 自动 Mesh 注册所有节点
+- TX 同时广播到所有节点
+- 节点 0 挖矿后自动触发共识同步
+- 状态栏实时显示同步计数
 
-## Project Structure
+## API 端点
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/v1/chain` | 完整区块链数据 |
+| GET | `/api/v1/blocks/latest` | 最新区块 |
+| GET | `/api/v1/blocks/{index}` | 按高度查区块 |
+| POST | `/api/v1/transactions` | 创建交易 |
+| GET | `/api/v1/transactions/pending` | 待打包交易池 |
+| POST | `/api/v1/mine` | 挖矿出块 |
+| GET | `/api/v1/balance/{address}` | 地址余额 |
+| GET | `/api/v1/history/{address}` | 地址交易历史 |
+| GET | `/api/v1/validate` | 校验本地区块链 |
+| POST | `/api/v1/nodes/register` | 注册邻居节点 |
+| GET | `/api/v1/nodes/resolve` | 触发共识决议 |
+
+## 项目结构
 
 ```
 GamlaChain/
-├── gamla_chain/              # Main package
-│   ├── core/                 #   Blockchain logic
-│   ├── api/                  #   FastAPI REST layer
-│   ├── utils/                #   Hashing, serialization
-│   ├── config.py             #   Configuration
-│   └── __main__.py           #   Entry point
+├── gamla_chain/              # 主包
+│   ├── core/                 #   区块链核心 (block, chain, consensus, wallet)
+│   ├── api/                  #   FastAPI REST 层 (server, routes)
+│   ├── utils/                #   工具函数 (crypto, serializer)
+│   ├── config.py             #   全局配置
+│   └── __main__.py           #   启动入口
 ├── frontend/
-│   └── index.html            #   Blockchain explorer SPA
+│   └── index.html            #   区块链浏览器 SPA (1052 行, 中文界面)
 ├── scripts/
-│   └── demo.py               #   CLI demo
+│   └── demo.py               #   CLI 演示脚本
 ├── tests/
-│   └── test_chain.py         #   11 unit tests
+│   └── test_chain.py         #   11 项单元测试
 ├── docs/
-│   ├── design.md             #   Design document
-│   └── usage.md              #   Usage guide
+│   ├── design.md             #   设计文档
+│   └── usage.md              #   使用文档
+├── README.md                 #   项目说明
 ├── LICENSE                   #   MIT
 └── requirements.txt
 ```
 
-## Configuration
+## 配置
 
-Via environment variables or `.env` file:
+环境变量或 `.env` 文件：
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `HOST` | `127.0.0.1` | API bind address |
-| `PORT` | `8000` | API port |
-| `MINING_DIFFICULTY` | `4` | PoW leading zeros |
-| `MINING_REWARD` | `50.0` | Block reward in GLC |
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| `HOST` | `127.0.0.1` | API 监听地址 |
+| `PORT` | `8000` | API 监听端口 |
+| `MINING_DIFFICULTY` | `4` | PoW 难度 (前导零个数) |
+| `MINING_REWARD` | `50.0` | 出块奖励 (GLC) |
 
-## Testing
+## 测试
 
 ```bash
 python -m pytest tests/ -v
-# 11 tests: chain, consensus, validation, node registration
+# 11 项测试: chain, consensus, validation, node registration
 ```
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+MIT — 详见 [LICENSE](LICENSE)

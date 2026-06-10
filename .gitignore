@@ -43,5 +43,8 @@ htmlcov/
 # Claude Code
 .claude/
 
+# Reference materials (large offline cache)
+docs/reference/
+
 # Logs
 *.log

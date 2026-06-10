@@ -1,7 +1,0 @@
-_iub.csRC = { consApiKey: 'cqPKsPCbyvmv3euB627MrmMBln07A0yB', showBranding: false, publicId: '94567bb2-6db6-11ee-8bfc-5ad8d8c564c0', floatingGroup: false };
-_iub.csEnabled = true;
-_iub.csPurposes = [4,3,1,2];
-_iub.cpUpd = 1775708574;
-_iub.csT = 2.0;
-_iub.googleConsentModeV2 = true;
-_iub.totalNumberOfProviders = 9;

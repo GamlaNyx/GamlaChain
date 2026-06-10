@@ -91,36 +91,30 @@ python -m gamla_chain
 在不同终端启动多个节点：
 
 ```bash
-# 终端 1 — 节点 A (端口 8000)
+# 终端 1 — 节点 A (默认端口 8000)
 python -m gamla_chain
 
-# 终端 2 — 节点 B (端口 8001)
+# 终端 2 — 节点 B
 python -m uvicorn gamla_chain.api.server:app --host 127.0.0.1 --port 8001
 
-# 终端 3 — 节点 C (端口 8002) (可选)
+# 终端 3 — 节点 C (可选，更多节点同理)
 python -m uvicorn gamla_chain.api.server:app --host 127.0.0.1 --port 8002
 ```
 
-将节点 B 注册到节点 A：
+### 方式一：通过 curl 操作
 
 ```bash
+# 节点 A 注册节点 B
 curl -X POST http://127.0.0.1:8000/api/v1/nodes/register \
   -H "Content-Type: application/json" \
   -d '{"nodes": ["http://127.0.0.1:8001"]}'
-```
 
-在节点 B 上挖几个区块，使其链更长：
-
-```bash
-# 挖 3 个区块
+# 在节点 B 上挖 3 个区块
 curl -X POST "http://127.0.0.1:8001/api/v1/mine?miner_address=miner_b"
 curl -X POST "http://127.0.0.1:8001/api/v1/mine?miner_address=miner_b"
 curl -X POST "http://127.0.0.1:8001/api/v1/mine?miner_address=miner_b"
-```
 
-在节点 A 上触发共识决议：
-
-```bash
+# 在节点 A 上触发共识决议
 curl http://127.0.0.1:8000/api/v1/nodes/resolve
 ```
 
@@ -133,6 +127,15 @@ curl http://127.0.0.1:8000/api/v1/nodes/resolve
   "new_chain": [...]
 }
 ```
+
+### 方式二：通过前端浏览器操作
+
+1. 打开 `frontend/index.html`
+2. 切换到 **Multi** 模式
+3. 在输入框中添加节点 URL → 点击 **Add**
+4. 点击 **Register All (Mesh)** 完成网状注册
+5. 在节点 B 的 Mine 按钮挖几个区块
+6. 在下拉框选择目标节点 → 点击 **Resolve** 触发共识
 
 ---
 
@@ -205,27 +208,45 @@ curl http://127.0.0.1:8000/api/v1/nodes/resolve
 
 ## 6. 前端浏览器
 
-### 6.1 独立使用（自带模拟数据）
-
-直接用浏览器打开 `frontend/index.html`，无需启动后端即可看到完整效果。
-
-### 6.2 连接后端使用
+### 6.1 启动方式
 
 1. 先启动 API 服务器: `python -m gamla_chain`
 2. 浏览器打开 `frontend/index.html`
-3. 前端自动连接 `http://127.0.0.1:8000/api/v1`
+3. 前端自动连接后端 API（默认 `http://127.0.0.1:8000`），所有数据来自实时 API 调用
 
-### 6.3 功能与快捷键
+### 6.2 单节点模式
+
+默认模式，展示单个节点的完整数据：
+- 统计卡片（区块高度、总交易数、难度、待打包池、对等节点数）
+- 区块列表（可滚动，点击查看详情）
+- 交易发送表单 + 待打包交易池
+- 6 个实时图表（出块时间、交易数、区块大小、TX 池饼图、链验证）
+
+### 6.3 多节点模式
+
+切换到 **Multi** 模式，支持 2+ 个节点的监控和共识管理：
+
+| 功能 | 操作 |
+|------|------|
+| 添加节点 | 输入 URL → 点击 Add |
+| 删除节点 | 点击节点标签上的 ✕ |
+| Mesh 注册 | 一键 Register All — 所有节点互相注册 |
+| 共识决议 | 下拉选择目标节点 → 点击 Resolve |
+| 对比统计 | 表格对比各节点高度、交易数、有效性等 |
+| 节点详情 | 每个节点独立展示区块列表 + 待打包池 |
+| 图表对比 | 前两个节点的出块时间和交易数图表并排 |
+
+### 6.4 操作方式
 
 | 功能 | 操作 |
 |------|------|
 | 查看区块详情 | 点击任意区块条目 |
 | 查看交易详情 | 点击任意待打包交易 |
-| 发送交易 | 填写表单 → 点击 Broadcast Transaction |
-| 批量随机交易 | 点击随机按钮 (🎲) |
-| 挖矿 | 点击左侧 Mine 按钮 |
-| 快捷键挖矿 | `Ctrl + M` |
-| 快捷键交易 | `Ctrl + T` 跳到交易表单 |
+| 发送交易 | 填写表单 → 点击 Send |
+| 挖矿 | 点击 Mine 按钮 |
+| 模式切换 | 导航栏 Single / Multi 按钮 |
+
+所有数据每 3 秒自动从后端轮询刷新。
 
 ---
 
@@ -286,14 +307,17 @@ GamlaChain/
 │   ├── config.py             #   全局配置
 │   └── __main__.py           #   启动入口
 ├── frontend/
-│   └── index.html            #   区块链浏览器 SPA
+│   └── index.html            #   区块链浏览器 SPA (实时 API 数据)
 ├── scripts/
 │   └── demo.py               #   命令行演示脚本
 ├── tests/
 │   └── test_chain.py         #   11 项单元测试
 ├── docs/
 │   ├── design.md             #   设计文档
-│   └── usage.md              #   使用文档 (本文件)
+│   ├── usage.md              #   使用文档 (本文件)
+│   └── reference/            #   教学参考材料
+├── README.md                 #   项目说明
+├── LICENSE                   #   MIT 开源协议
 ├── requirements.txt
 ├── pyproject.toml
 └── .env.example

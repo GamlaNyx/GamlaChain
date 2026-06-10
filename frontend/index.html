@@ -222,12 +222,12 @@ body { font-family:'DM Sans','Noto Sans SC','Microsoft YaHei','PingFang SC',sans
           <button class="btn-cyan flex-1" onclick="sendTx(0)" style="padding:7px 14px;font-size:11px;"><i class="fa-solid fa-rocket mr-1"></i>发送</button>
         </div>
       </div>
-      <div class="glass p-4 flex-1">
-        <div class="flex items-center justify-between mb-2">
-          <h2 class="font-display text-xs font-semibold uppercase tracking-wider" style="color:var(--text-primary);"><i class="fa-solid fa-clock mr-1.5" style="color:var(--accent-purple)"></i>Pending TXs</h2>
-          <span class="badge badge-pending text-[10px]" id="pendingBadge0">0</span>
+      <div class="glass p-3">
+        <div class="flex items-center justify-between mb-1.5">
+          <h2 class="font-display text-[10px] font-semibold uppercase tracking-wider" style="color:var(--text-primary);"><i class="fa-solid fa-clock mr-1.5" style="color:var(--accent-purple)"></i>Pending TXs</h2>
+          <span class="badge badge-pending text-[9px]" id="pendingBadge0">0</span>
         </div>
-        <div class="scroll-list-sm" id="pendingList0"></div>
+        <div class="scroll-list-sm" id="pendingList0" style="max-height:140px;"></div>
       </div>
     </div>
 

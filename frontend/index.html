@@ -132,7 +132,9 @@ body { font-family:'DM Sans',sans-serif; background:#1a1a2e; color:var(--text-pr
 .multi-nodes-grid.cols-many { grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); }
 
 @media(max-width:1400px){.main-grid{grid-template-columns:1fr 1fr}.charts-col{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:14px}}
+@media(max-width:1100px){#statsRowA{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:900px){.main-grid{grid-template-columns:1fr}.multi-nodes-grid[class*="cols-"]{grid-template-columns:1fr}.charts-col{grid-template-columns:1fr}}
+@media(max-width:640px){#statsRowA{grid-template-columns:repeat(2,1fr)}}
 
 .node-dot-0 { color:#00d4ff; } .node-dot-1 { color:#7c3aed; } .node-dot-2 { color:#ec4899; }
 .node-dot-3 { color:#22c55e; } .node-dot-4 { color:#f59e0b; }
@@ -278,6 +280,7 @@ body { font-family:'DM Sans',sans-serif; background:#1a1a2e; color:var(--text-pr
     <span class="font-display text-xs font-semibold uppercase tracking-wider" style="color:var(--accent-cyan);">
       <i class="fa-solid fa-network-wired mr-1.5"></i>Nodes
     </span>
+    <span id="nodeDotsBar" class="flex items-center gap-2"></span>
     <div class="flex items-center gap-2 flex-1" id="nodeUrlTags"><!-- dynamic --></div>
     <div class="flex items-center gap-1.5">
       <input class="glass-input" type="text" id="newNodeUrl" placeholder="http://127.0.0.1:8002" style="font-size:11px;padding:5px 10px;width:200px;">
@@ -348,7 +351,7 @@ function timeAgo(ts) {
   return Math.round(s/3600)+'h ago';
 }
 function fmt(n, d) { if(n==null) return '--'; return Number(n).toLocaleString(undefined, d!=null?{minimumFractionDigits:d,maximumFractionDigits:d}:undefined); }
-function esc(json) { return JSON.stringify(json).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function esc(json) { return JSON.stringify(json).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 // ============================================================
 // API
@@ -425,10 +428,13 @@ function removeNode(i) {
 }
 
 function renderNodeManager() {
-  // Node tags
+  // Dots (separate container, stable across re-renders)
+  document.getElementById('nodeDotsBar').innerHTML = nodeUrls.map((_,i)=>`
+    <span class="pulse-dot" id="multiDot${i}" style="width:6px;height:6px;"></span>
+  `).join('');
+  // URL tags
   document.getElementById('nodeUrlTags').innerHTML = nodeUrls.map((url,i)=>`
     <span class="badge" style="background:${nodeColor(i)}22;color:${nodeColor(i)};border:1px solid ${nodeColor(i)}44;font-size:10px;">
-      <span class="pulse-dot" id="multiDot${i}" style="width:6px;height:6px;"></span>
       ${url.replace('http://','')}
       <i class="fa-solid fa-xmark ml-1 cursor-pointer" onclick="removeNode(${i})" style="font-size:9px;opacity:0.6;"></i>
     </span>
@@ -538,7 +544,15 @@ async function poll() {
 // ============================================================
 function updateSingleView() {
   const d = nodesData[0];
-  if(!d||!d.online) {
+  const loading = !d;
+  if(loading) {
+    ['sHeight','sTxCount','sDifficulty','sPending','sPeers'].forEach(id=>document.getElementById(id).textContent='···');
+    document.getElementById('blockList0').innerHTML='<div style="color:var(--text-muted);text-align:center;padding:40px;font-size:18px;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+    document.getElementById('pendingList0').innerHTML='<div style="color:var(--text-muted);text-align:center;padding:20px;font-size:14px;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+    document.getElementById('pendingBadge0').textContent='···';
+    return;
+  }
+  if(!d.online) {
     ['sHeight','sTxCount','sDifficulty','sPending','sPeers'].forEach(id=>document.getElementById(id).textContent='offline');
     document.getElementById('blockList0').innerHTML='<div style="color:var(--text-muted);text-align:center;padding:40px;font-style:italic;">API offline — start with: python -m gamla_chain</div>';
     document.getElementById('pendingList0').innerHTML='<div style="color:var(--text-muted);text-align:center;padding:20px;font-style:italic;">--</div>';
@@ -574,6 +588,8 @@ function updateSingleView() {
 
 function renderBlockList(elId, d) {
   const el = document.getElementById(elId);
+  if(!el) return;
+  const st = el.scrollTop;
   if(!d||!d.online||!d.chain.length) { el.innerHTML='<div style="color:var(--text-muted);text-align:center;padding:30px;font-style:italic;">No blocks</div>'; return; }
   el.innerHTML = [...d.chain].reverse().map(b=>`
     <div class="block-item" onclick="showBlockDetail(${esc(b)})">
@@ -588,6 +604,7 @@ function renderBlockList(elId, d) {
       </div>
     </div>
   `).join('');
+  el.scrollTop = Math.min(st, el.scrollHeight);
 }
 
 function renderPendingList(elId, d, badgeId) {
@@ -710,8 +727,12 @@ function updateMultiView() {
     }
   });
 
-  // Charts: show first 2 nodes
-  document.getElementById('multiCharts').innerHTML = nodeUrls.slice(0,2).map((_,i)=>`
+  // Charts: show all nodes (up to 4, adapt grid columns)
+  const chartNodes = nodeUrls.slice(0,4);
+  const chartCols = chartNodes.length<=2?2:chartNodes.length;
+  const chartGrid = document.getElementById('multiCharts');
+  chartGrid.style.gridTemplateColumns = 'repeat('+chartCols+',1fr)';
+  chartGrid.innerHTML = chartNodes.map((_,i)=>`
     <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:${nodeColor(i)};"><i class="fa-solid fa-chart-line mr-1"></i>Node ${i} — Block Time</h2><div class="chart-wrap"><canvas id="multiChartBT${i}"></canvas></div></div>
     <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:${nodeColor(i)};"><i class="fa-solid fa-chart-bar mr-1"></i>Node ${i} — TX per Block</h2><div class="chart-wrap"><canvas id="multiChartTX${i}"></canvas></div></div>
   `).join('');
@@ -762,7 +783,7 @@ async function resolveOnSelected() {
   const url = getNodeUrl(idx);
   showToast('<i class="fa-solid fa-spinner fa-spin mr-2"></i>Resolving consensus on Node '+idx+'...','info');
   const res = await apiGet(url,'/api/v1/nodes/resolve');
-  if(res) showToast('<i class="fa-solid fa-check-circle mr-2"></i>'+res.message,'res.message?.includes("replaced")?"info":"success"');
+  if(res) showToast('<i class="fa-solid fa-check-circle mr-2"></i>'+res.message, res.message?.includes('replaced')?'info':'success');
   else showToast('<i class="fa-solid fa-triangle-exclamation mr-2"></i>Resolve failed','error');
   poll();
 }
@@ -831,14 +852,14 @@ function scheduleTx() {
 function scheduleBlock() {
   if(!simRunning) return;
   simBlockTimer = setTimeout(async ()=>{
-    if(!simRunning || simMining) return;
+    if(!simRunning || simMining) { scheduleBlock(); return; } // skip this tick, reschedule
     simMining = true;
     const url = getNodeUrl(simNodeIdx);
     await apiPost(url,'/api/v1/mine?miner_address=sim_miner');
     simMining = false;
     simBlockCount++;
     document.getElementById('simStatus').textContent = simTxCount+' TX | '+simBlockCount+' blk | ' + ((Date.now()-simStartTime)/1000).toFixed(0)+'s';
-    scheduleBlock(); // schedule next block (every 0.83s)
+    scheduleBlock();
   }, 833);
 }
 
@@ -899,12 +920,16 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModalDirect();}
 // ============================================================
 // TOASTS
 // ============================================================
+const TOAST_MAX = 3;
 function showToast(msg, type) {
+  const container = document.getElementById('toastContainer');
+  // Remove oldest if over limit
+  while(container.children.length >= TOAST_MAX) container.firstChild.remove();
   const colors = {success:'#4ade80',info:'#00d4ff',error:'#ef4444'};
   const t = document.createElement('div');
   t.className='toast'; t.style.borderLeft='3px solid '+(colors[type]||colors.info);
   t.innerHTML=msg;
-  document.getElementById('toastContainer').appendChild(t);
+  container.appendChild(t);
   setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(40px)';t.style.transition='all 0.3s ease';setTimeout(()=>t.remove(),300);},3500);
 }
 
@@ -914,10 +939,6 @@ function showToast(msg, type) {
 setMode(mode);
 setInterval(poll, 3000);
 
-console.log('%c🚀 GamlaChain Explorer %cready — all data from backend API',
-  'font-family:Orbitron;font-size:14px;color:#00d4ff;','color:#a0aec0;');
-console.log('%c  Mode: '+mode+'  |  Nodes: '+nodeUrls.join(', '),
-  'color:#64748b;font-size:11px;');
 </script>
 </body>
 </html>

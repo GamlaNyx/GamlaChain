@@ -300,19 +300,14 @@ body { font-family:'DM Sans','Noto Sans SC','Microsoft YaHei','PingFang SC',sans
     <span class="text-xs ml-2" style="color:var(--text-muted);" id="consensusStatus">--</span>
   </div>
 
-  <!-- Block Viz: single common chain (from node 0, the miner) -->
+  <!-- Block Viz (all nodes) -->
   <div class="px-5 pt-2">
     <div class="glass p-3">
-      <h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-2" style="color:var(--text-primary);"><i class="fa-solid fa-link mr-1" style="color:var(--accent-cyan)"></i>公共区块链 (节点0 矿工)</h2>
-      <div class="flex items-center overflow-x-auto" id="multiChainViz" style="gap:3px;min-height:50px;">
-        <div style="color:var(--text-muted);text-align:center;width:100%;font-size:10px;font-style:italic;">加载中...</div>
+      <h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-2" style="color:var(--text-primary);"><i class="fa-solid fa-link mr-1" style="color:var(--accent-cyan)"></i>可视化</h2>
+      <div class="flex flex-col gap-2" id="multiBlockChainViz">
+        <div style="color:var(--text-muted);text-align:center;font-size:10px;font-style:italic;">加载中...</div>
       </div>
     </div>
-  </div>
-
-  <!-- Node Status: compact sync cards -->
-  <div class="px-5 pt-2">
-    <div class="flex items-center gap-3 flex-wrap" id="nodeStatusCards"><!-- dynamic --></div>
   </div>
 
   <!-- Comparison stats table -->
@@ -326,13 +321,8 @@ body { font-family:'DM Sans','Noto Sans SC','Microsoft YaHei','PingFang SC',sans
   <!-- Node detail cards -->
   <div class="multi-nodes-grid cols-2" id="nodeCards"><!-- dynamic --></div>
 
-  <!-- Charts: 2x2 grid -->
-  <div class="px-5 pb-6 grid grid-cols-2 gap-3" id="multiCharts">
-    <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-chart-line mr-1" style="color:var(--accent-cyan)"></i>公共链 — 出块时间 (秒)</h2><div class="chart-wrap"><canvas id="mChartBlockTime"></canvas></div></div>
-    <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-chart-bar mr-1" style="color:var(--accent-purple)"></i>公共链 — 每块交易数</h2><div class="chart-wrap"><canvas id="mChartTxCount"></canvas></div></div>
-    <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-arrow-trend-up mr-1" style="color:#22c55e"></i>链增长速度 (块/min)</h2><div class="chart-wrap"><canvas id="mChartGrowth"></canvas></div></div>
-    <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted)"><i class="fa-solid fa-coins mr-1" style="color:var(--accent-pink)"></i>流通量增长 (GLC)</h2><div class="chart-wrap"><canvas id="mChartSupply"></canvas></div></div>
-  </div>
+  <!-- Charts for first 2 nodes -->
+  <div class="px-5 pb-6 grid grid-cols-2 gap-3" id="multiCharts"></div>
 </div>
 
 <!-- MODALS -->
@@ -652,46 +642,43 @@ function renderBlockChainViz(elId, d) {
   }).join('');
 }
 
-function renderCommonChainViz() {
-  const el = document.getElementById('multiChainViz');
+function renderMultiBlockChainViz() {
+  const el = document.getElementById('multiBlockChainViz');
   if(!el) return;
-  const d = nodesData[0];
-  if(!d||!d.online||!d.chain.length) { el.innerHTML='<div style="color:var(--text-muted);text-align:center;width:100%;font-size:10px;font-style:italic;">暂无区块</div>'; return; }
-  const blocks = d.chain.slice(-10);
-  el.innerHTML = blocks.map((b,i)=>{
-    const w = Math.min(24,Math.max(4,b.transactions?.length||1));
-    const ts = b.timestamp ? new Date(b.timestamp*1000).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}) : '';
-    return '<div class="block-viz-item" onclick="showBlockDetail('+JSON.stringify(b).replace(/"/g,'&quot;')+')" style="flex-shrink:0;text-align:center;cursor:pointer;padding:5px 9px;border-radius:9px;background:rgba(0,212,255,'+(0.04+w*0.005)+');border:1px solid rgba(0,212,255,'+(0.08+w*0.01)+');transition:all 0.3s ease;min-width:68px;" title="Block #'+b.index+' | '+(b.transactions?.length||0)+' TX | nonce:'+b.nonce+'">'+
-      '<div class="font-display text-[10px] font-bold" style="color:var(--accent-cyan);">#'+b.index+'</div>'+
-      '<div class="font-mono text-[7px]" style="color:var(--text-secondary);">'+b.hash.slice(2,8)+'</div>'+
-      '<div class="text-[7px] mt-0.5" style="color:'+(b.transactions?.length>0?'#4ade80':'var(--text-muted)')+';">'+(b.transactions?.length||0)+' TX</div>'+
-    '</div>'+(i<blocks.length-1?'<span style="flex-shrink:0;color:var(--accent-cyan);font-size:9px;align-self:center;">◆─◆</span>':'');
-  }).join('');
-}
-
-function renderNodeStatusCards() {
-  const el = document.getElementById('nodeStatusCards');
-  if(!el) return;
-  const minerLen = (nodesData[0]?.length||0);
   el.innerHTML = nodeUrls.map((_,i)=>{
     const d = nodesData[i];
-    const len = d?.length||0;
-    const synced = len===minerLen && len>0;
-    const diff = minerLen - len;
-    const color = nodeColor(i);
-    return '<div class="glass" style="padding:8px 12px;min-width:140px;">'+
-      '<div class="flex items-center gap-2">'+
-        '<span class="font-mono text-[10px] font-bold" style="color:'+color+';">节点'+i+'</span>'+
-        '<span class="font-mono text-[11px]" style="color:var(--text-primary);">'+fmt(len)+' 块</span>'+
-        (d?.online
-          ? (synced
-            ? '<span class="badge badge-success text-[9px]"><i class="fa-solid fa-check"></i> 已同步</span>'
-            : '<span class="badge badge-pending text-[9px]">差'+diff+'块</span>')
-          : '<span class="badge badge-danger text-[9px]">离线</span>')+
-      '</div></div>';
+    if(!d||!d.online||!d.chain.length) return '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;"><span class="font-mono text-[9px] font-bold" style="color:'+nodeColor(i)+';min-width:50px;">节点'+i+'</span><span style="color:var(--text-muted);font-size:9px;">离线</span></div>';
+    const blocks = d.chain.slice(-7);
+    return '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;"><span class="font-mono text-[9px] font-bold" style="color:'+nodeColor(i)+';min-width:50px;">节点'+i+'</span><div style="display:flex;align-items:center;gap:2px;overflow-x:auto;flex:1;">'+
+      blocks.map((b,j)=>{
+        const w = Math.min(20,Math.max(3,b.transactions?.length||1));
+        return '<div onclick="showBlockDetail('+JSON.stringify(b).replace(/"/g,'&quot;')+')" style="flex-shrink:0;cursor:pointer;text-align:center;padding:4px 7px;border-radius:7px;background:rgba(0,212,255,'+(0.03+w*0.004)+');border:1px solid rgba(0,212,255,'+(0.06+w*0.008)+');min-width:56px;">'+
+          '<span class="font-display text-[9px] font-bold" style="color:var(--accent-cyan);">#'+b.index+'</span>'+
+          '<div class="font-mono text-[6px]" style="color:var(--text-secondary);">'+b.hash.slice(2,10)+'</div>'+
+        '</div>'+(j<blocks.length-1?'<span style="color:var(--accent-cyan);font-size:7px;">◆</span>':'');
+      }).join('')+'</div></div>';
   }).join('');
 }
 
+function renderPendingList(elId, d, badgeId) {
+  document.getElementById(badgeId).textContent = d?.pending_count||0;
+  const el = document.getElementById(elId);
+  if(!d||!d.online||!d.pending||d.pending.length===0) {
+    el.innerHTML='<div style="color:var(--text-muted);text-align:center;padding:20px;font-style:italic;font-size:11px;">无待打包交易</div>'; return;
+  }
+  el.innerHTML = d.pending.slice(0,15).map(tx=>`
+    <div class="tx-item" onclick="showTxDetail(${esc(tx)})" style="padding:8px 10px;">
+      <div class="flex items-center justify-between mb-0.5">
+        <span class="font-mono text-[10px]" style="color:var(--accent-pink);">${shortHash(tx.tx_hash||tx.hash)}</span>
+        <span class="badge badge-pending text-[9px]">pending</span>
+      </div>
+      <div class="flex justify-between text-[10px]" style="color:var(--text-muted);">
+        <span>${shortHash(tx.sender)} → ${shortHash(tx.receiver)}</span>
+        <span style="color:#4ade80;">${fmt(tx.amount,4)} GLC</span>
+      </div>
+    </div>
+  `).join('');
+}
 
 // ============================================================
 // SINGLE CHARTS
@@ -764,8 +751,7 @@ function updateMultiView() {
   }
 
   // Block chain viz (multi)
-  renderCommonChainViz();
-  renderNodeStatusCards();
+  renderMultiBlockChainViz();
 
   // Node detail cards
   const gc = nodeUrls.length; const cols = gc===1?1:gc===3?3:gc>=4?'many':2;
@@ -797,34 +783,48 @@ function updateMultiView() {
     }
   });
 
-  // Multi charts: render common chain data
+  // Charts: show all nodes (up to 4, adapt grid columns)
+  const chartNodes = nodeUrls.slice(0,4);
+  const chartCols = chartNodes.length<=2?2:chartNodes.length;
+  const chartGrid = document.getElementById('multiCharts');
+  chartGrid.style.gridTemplateColumns = 'repeat('+chartCols+',1fr)';
+  chartGrid.innerHTML = chartNodes.map((_,i)=>`
+    <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:${nodeColor(i)};"><i class="fa-solid fa-chart-line mr-1"></i>Node ${i} — Block Time</h2><div class="chart-wrap"><canvas id="multiChartBT${i}"></canvas></div></div>
+    <div class="glass p-3"><h2 class="font-display text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:${nodeColor(i)};"><i class="fa-solid fa-chart-bar mr-1"></i>Node ${i} — 每块交易数</h2><div class="chart-wrap"><canvas id="multiChartTX${i}"></canvas></div></div>
+  `).join('');
+
+  // Render chart instances for each node
   renderMultiCharts();
 }
 
+// ============================================================
+// MULTI CHARTS
+// ============================================================
 let mCharts = {};
-function mChart(canvasId, type, labels, data, borderColor, bg1, bg2) {
-  const ctx = document.getElementById(canvasId).getContext("2d");
+function mChart(canvasId, type, labels, data, borderColor) {
+  const el = document.getElementById(canvasId);
+  if(!el) return;
+  const ctx = el.getContext('2d');
   if(mCharts[canvasId]) mCharts[canvasId].destroy();
-  const g = ctx.createLinearGradient(0,0,0,190);
-  g.addColorStop(0,bg1); g.addColorStop(1,bg2);
+  const g = ctx.createLinearGradient(0,0,0,160);
+  g.addColorStop(0, borderColor.replace('1)', '0.2)').replace('rgb','rgba')); g.addColorStop(1, 'rgba(0,0,0,0)');
   mCharts[canvasId] = new Chart(ctx, {
-    type, data:{labels,datasets:[{data,borderColor,backgroundColor:g,borderWidth:2,fill:type==="line",tension:0.4,pointRadius:0,pointHoverRadius:4}]},
+    type, data:{labels,datasets:[{data,borderColor,backgroundColor:g,borderWidth:2,fill:type==='line',tension:0.4,pointRadius:0,pointHoverRadius:3}]},
     options:{responsive:true,maintainAspectRatio:false,animation:{duration:400},plugins:{legend:{display:false}},
-      scales:{x:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"rgba(255,255,255,0.4)",font:{size:9},maxTicksLimit:6}},
-              y:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"rgba(255,255,255,0.4)",font:{size:9},maxTicksLimit:4}}}}
+      scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(255,255,255,0.4)',font:{size:8},maxTicksLimit:5}},
+              y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(255,255,255,0.4)',font:{size:8},maxTicksLimit:3}}}}
   });
 }
+
 function renderMultiCharts() {
-  const d = nodesData[0];
-  if(!d||!d.online||!d.chain||d.chain.length<2) return;
-  const b = d.chain.slice(-20), lbls = b.map(x=>"#"+x.index);
-  const times=[]; for(let i=1;i<b.length;i++) times.push(Math.max(0,(b[i].timestamp-b[i-1].timestamp)||0));
-  mChart("mChartBlockTime","line",lbls.slice(1),times,"#00d4ff","rgba(0,212,255,0.25)","rgba(0,212,255,0)");
-  mChart("mChartTxCount","line",lbls,b.map(x=>x.transactions?.length||0),"#ec4899","rgba(236,72,153,0.2)","rgba(236,72,153,0)");
-  const growth=[]; for(let i=1;i<b.length;i++) growth.push(Math.max(0,b[i].timestamp-b[i-1].timestamp>0?60/(b[i].timestamp-b[i-1].timestamp):0));
-  mChart("mChartGrowth","bar",lbls,growth,"rgba(34,197,94,0.6)","rgba(34,197,94,0.4)","rgba(34,197,94,0.05)");
-  let running=0; const supply=b.map(x=>{running+=(x.transactions||[]).filter(t=>t.sender==="network").reduce((s,t)=>s+t.amount,0);return running;});
-  mChart("mChartSupply","line",lbls,supply,"rgba(236,72,153,0.8)","rgba(236,72,153,0.2)","rgba(236,72,153,0)");
+  nodeUrls.slice(0,4).forEach((_,i)=>{
+    const d = nodesData[i];
+    if(!d||!d.online||!d.chain||d.chain.length<2) return;
+    const b = d.chain.slice(-12), lbls = b.map(x=>'#'+x.index);
+    const times=[]; for(let j=1;j<b.length;j++) times.push(Math.max(0,(b[j].timestamp-b[j-1].timestamp)||0));
+    mChart('multiChartBT'+i, 'line', lbls.slice(1), times, 'rgb(0,212,255)');
+    mChart('multiChartTX'+i, 'line', lbls, b.map(x=>x.transactions?.length||0), 'rgb(236,72,153)');
+  });
 }
 
 // ============================================================

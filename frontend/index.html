@@ -918,7 +918,7 @@ function toggleSimulation() {
       scheduleBlockMulti();
     })();
   } else {
-    showToast('<i class="fa-solid fa-rocket mr-2"></i>模拟交易已启动 — TX间隔0.17-1s, 出块间隔0.83s','info');
+    showToast('<i class="fa-solid fa-rocket mr-2"></i>模拟交易已启动 — TX间隔0.05-0.3s, 出块间隔2.5s','info');
     scheduleTxSingle(0); scheduleBlockSingle(0);
   }
 }
@@ -941,7 +941,7 @@ function stopSimulation() {
 function scheduleTxSingle(nodeIdx) {
   if(!simRunning) return;
   if(nodeIdx===undefined) nodeIdx = 0;
-  const delay = 167 + Math.random()*833;
+  const delay = 50 + Math.random()*250;
   simTxTimer = setTimeout(async ()=>{
     if(!simRunning) return;
     const from = SIM_ADDRESSES[Math.floor(Math.random()*SIM_ADDRESSES.length)];
@@ -964,13 +964,13 @@ function scheduleBlockSingle(nodeIdx) {
     simBlockCount++;
     document.getElementById('simStatus').textContent = simTxCount+' TX | '+simBlockCount+' blk | ' + ((Date.now()-simStartTime)/1000).toFixed(0)+'s';
     scheduleBlockSingle(nodeIdx);
-  }, 833);
+  }, 2500);
 }
 
 // ── Multi node: TX broadcast to ALL nodes ──
 function scheduleTxMulti() {
   if(!simRunning) return;
-  const delay = 167 + Math.random()*833;
+  const delay = 50 + Math.random()*250;
   simTxTimer = setTimeout(async ()=>{
     if(!simRunning) return;
     const from = SIM_ADDRESSES[Math.floor(Math.random()*SIM_ADDRESSES.length)];
@@ -1001,7 +1001,7 @@ function scheduleBlockMulti() {
     }
     document.getElementById('simStatus').textContent = simTxCount+' TX | '+simBlockCount+' blk | '+((Date.now()-simStartTime)/1000).toFixed(0)+'s | ↻'+simSyncOk;
     scheduleBlockMulti();
-  }, 833);
+  }, 2500);
 }
 
 // ============================================================

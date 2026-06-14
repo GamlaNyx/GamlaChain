@@ -28,6 +28,8 @@ def create_app(static_dir: str = "frontend") -> FastAPI:
     static_path = Path(static_dir)
     if static_path.exists():
         app.mount("/css", StaticFiles(directory=str(static_path / "css")), name="css")
-        app.mount("/js", StaticFiles(directory=str(static_path)), name="static")
+        # Mount frontend at root so /index.html, /login.html, etc. resolve directly.
+        # API routes (/api/v1/*) take priority over static files.
+        app.mount("/", StaticFiles(directory=str(static_path), html=True), name="static")
 
     return app

@@ -1,20 +1,20 @@
 /* frontend/css/neumorphism.css */
-/* Neumorphism Design System for GamlaChain */
+/* Neumorphism Design System for GamlaChain — Cream + Dark Green */
 
 :root {
-  --bg: #e8ecf1;
-  --bg-light: #eef1f5;
-  --shadow-dark: #c4cad3;
+  --bg: #f3efe7;
+  --bg-light: #faf7f2;
+  --shadow-dark: #d5d0c5;
   --shadow-light: #ffffff;
   --text-primary: #2d3748;
-  --text-secondary: #718096;
-  --text-muted: #a0aec0;
-  --accent: #5b7fff;
-  --accent-hover: #4a6ee0;
-  --success: #68b984;
-  --warning: #e8b464;
-  --danger: #e07373;
-  --border-light: #dfe3e8;
+  --text-secondary: #6b7c7c;
+  --text-muted: #9a9e95;
+  --accent: #5a8a6e;
+  --accent-hover: #4a7a5e;
+  --success: #5a8a6e;
+  --warning: #c9a96e;
+  --danger: #c97070;
+  --border-light: #ddd8cf;
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -26,7 +26,7 @@
   --shadow-inset: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
   --shadow-inset-sm: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light);
 
-  --font-title: 'DM Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-title: 'DM Sans', 'Noto Serif SC', 'PingFang SC', 'Microsoft YaHei', serif;
   --font-body: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
@@ -95,9 +95,9 @@ h3 { font-size: 1rem; }
 .btn-accent {
   background: var(--accent);
   color: #fff;
-  box-shadow: 4px 4px 8px rgba(91, 127, 255, 0.3);
+  box-shadow: 4px 4px 8px rgba(90, 138, 110, 0.3);
 }
-.btn-accent:hover { background: var(--accent-hover); box-shadow: 6px 6px 12px rgba(91, 127, 255, 0.4); }
+.btn-accent:hover { background: var(--accent-hover); box-shadow: 6px 6px 12px rgba(90, 138, 110, 0.4); }
 
 .btn-danger { background: var(--bg); color: var(--danger); box-shadow: var(--shadow-raised); }
 .btn-danger:hover { box-shadow: var(--shadow-raised-lg); }
@@ -118,7 +118,7 @@ h3 { font-size: 1rem; }
   outline: none;
   transition: box-shadow 0.3s ease;
 }
-.input:focus { box-shadow: var(--shadow-inset), 0 0 0 2px rgba(91, 127, 255, 0.2); }
+.input:focus { box-shadow: var(--shadow-inset), 0 0 0 2px rgba(90, 138, 110, 0.2); }
 .input::placeholder { color: var(--text-muted); }
 .input-mono { font-family: var(--font-mono); font-size: 13px; }
 
@@ -135,7 +135,7 @@ h3 { font-size: 1rem; }
   outline: none;
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23718096' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239a9e95' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
 }
@@ -144,9 +144,9 @@ h3 { font-size: 1rem; }
 .form-label { display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
 
 .alert { padding: 12px 18px; border-radius: var(--radius-md); font-size: 13px; font-weight: 500; }
-.alert-error { background: #fde8e8; color: #c53030; box-shadow: var(--shadow-inset-sm); }
-.alert-success { background: #e6f4ec; color: #276749; box-shadow: var(--shadow-inset-sm); }
-.alert-info { background: #e8ecf8; color: #2b4a8a; box-shadow: var(--shadow-inset-sm); }
+.alert-error { background: #fae8e8; color: #b04040; box-shadow: var(--shadow-inset-sm); }
+.alert-success { background: #e8f2ec; color: #3a6a4e; box-shadow: var(--shadow-inset-sm); }
+.alert-info { background: #e8ecea; color: #4a6a5e; box-shadow: var(--shadow-inset-sm); }
 
 .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; }
 .badge-success { color: var(--success); background: var(--bg); box-shadow: var(--shadow-inset-sm); }

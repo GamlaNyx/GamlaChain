@@ -46,5 +46,9 @@ htmlcov/
 # Reference materials (large offline cache)
 docs/reference/
 
+# Runtime data
+data/*.json
+!data/.gitkeep
+
 # Logs
 *.log

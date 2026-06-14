@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理控制台 — GamlaChain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="css/neumorphism.css">
+<style>
+  /* Dark theme overrides for admin content area */
+  :root {
+    --dark-bg: #1a1a2e;
+    --dark-card: rgba(255,255,255,0.04);
+    --dark-card-hover: rgba(255,255,255,0.08);
+    --dark-border: rgba(255,255,255,0.10);
+    --dark-text: #f0f4ff;
+    --dark-text-secondary: #a0aec0;
+    --dark-text-muted: #64748b;
+    --cyan: #00d4ff;
+    --purple: #7c3aed;
+    --pink: #ec4899;
+    --green: #22c55e;
+    --gold: #f59e0b;
+  }
+
+  .admin-content {
+    background: var(--dark-bg);
+    color: var(--dark-text);
+    min-height: 100vh;
+    font-family: var(--font-body);
+  }
+
+  .dark-card {
+    background: var(--dark-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--dark-border);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+  }
+  .dark-card:hover { background: var(--dark-card-hover); border-color: rgba(255,255,255,0.18); }
+
+  .dark-stat {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .dark-stat-item {
+    background: var(--dark-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--dark-border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .dark-stat-item::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .dark-stat-item:hover::before { opacity: 1; }
+  .dark-stat-item .stat-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--dark-text-muted);
+    margin-bottom: 4px;
+  }
+  .dark-stat-item .stat-value {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--dark-text);
+  }
+
+  .dark-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .dark-table th {
+    text-align: left;
+    padding: 10px 12px;
+    color: var(--dark-text-muted);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--dark-border);
+  }
+  .dark-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    color: var(--dark-text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .dark-table tr:hover td { background: rgba(255,255,255,0.03); }
+
+  .dark-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+    font-family: var(--font-body);
+  }
+  .dark-btn-cyan {
+    background: linear-gradient(135deg, #00d4ff, #0099ff);
+    color: #0a0a1a;
+  }
+  .dark-btn-cyan:hover { box-shadow: 0 0 20px rgba(0,212,255,0.35); transform: translateY(-1px); }
+  .dark-btn-purple {
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    color: #fff;
+  }
+  .dark-btn-purple:hover { box-shadow: 0 0 20px rgba(124,58,237,0.35); transform: translateY(-1px); }
+  .dark-btn:active { transform: scale(0.97); }
+
+  .dark-input {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--dark-border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--dark-text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.3s;
+  }
+  .dark-input:focus { border-color: var(--cyan); }
+
+  .subpage { display: none; }
+  .subpage.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .badge-cyan { color: var(--cyan); background: rgba(0,212,255,0.12); border: 1px solid rgba(0,212,255,0.2); padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+  .badge-green { color: var(--green); background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.2); padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+  .badge-purple { color: var(--purple); background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.2); padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+
+  .block-item {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .block-item:hover { background: rgba(0,212,255,0.06); border-color: rgba(0,212,255,0.2); }
+
+  .tx-pool-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar-layout">
+  <!-- SIDEBAR (light neumorphism) -->
+  <aside class="sidebar">
+    <div style="padding: 8px 12px 16px; font-family:var(--font-title); font-weight:700; font-size:16px; display:flex; align-items:center; gap:8px;">
+      <div class="logo-icon" style="width:32px;height:32px;font-size:14px;border-radius:8px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-shield-halved"></i></div>
+      管理控制台
+    </div>
+    <button class="sidebar-item active" data-page="dashboard" onclick="switchPage('dashboard', this)">
+      <i class="fa-solid fa-gauge-high"></i> 仪表盘
+    </button>
+    <button class="sidebar-item" data-page="blockchain" onclick="switchPage('blockchain', this)">
+      <i class="fa-solid fa-cubes"></i> 区块链
+    </button>
+    <button class="sidebar-item" data-page="pool" onclick="switchPage('pool', this)">
+      <i class="fa-solid fa-clock"></i> 交易池
+    </button>
+    <button class="sidebar-item" data-page="users" onclick="switchPage('users', this)">
+      <i class="fa-solid fa-users"></i> 用户管理
+    </button>
+    <button class="sidebar-item" data-page="mining" onclick="switchPage('mining', this)">
+      <i class="fa-solid fa-hammer"></i> 挖矿
+    </button>
+    <div class="sidebar-divider"></div>
+    <a href="/dashboard.html" class="sidebar-item">
+      <i class="fa-solid fa-arrow-left"></i> 返回仪表盘
+    </a>
+    <button class="sidebar-item danger" onclick="logout()">
+      <i class="fa-solid fa-right-from-bracket"></i> 登出
+    </button>
+    <div class="sidebar-user">
+      <div class="username" id="sidebarUsername">--</div>
+      <div class="role-badge" style="color:var(--danger);">管理员</div>
+    </div>
+  </aside>
+
+  <!-- MAIN (dark theme) -->
+  <main class="admin-content" style="flex:1;padding:24px 28px;overflow-y:auto;">
+
+    <!-- DASHBOARD -->
+    <section id="subpage-dashboard" class="subpage active">
+      <h2 style="font-family:var(--font-title);margin-bottom:20px;display:flex;align-items:center;gap:8px;">
+        <span style="color:var(--cyan);">⎈</span> 系统概览
+      </h2>
+      <div class="dark-stat" id="dashboardStats"></div>
+      <div class="dark-card">
+        <h3 style="font-size:14px;margin-bottom:12px;color:var(--dark-text-secondary);">⚡ 快速信息</h3>
+        <div id="dashboardInfo" style="font-size:13px;color:var(--dark-text-muted);">加载中...</div>
+      </div>
+    </section>
+
+    <!-- BLOCKCHAIN -->
+    <section id="subpage-blockchain" class="subpage">
+      <h2 style="font-family:var(--font-title);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+        <span style="color:var(--cyan);">⛓</span> 区块链浏览器
+      </h2>
+      <div class="dark-card" style="display:flex;gap:8px;margin-bottom:14px;">
+        <input type="text" class="dark-input" id="blockSearch" placeholder="#区块号 或 0x地址..." style="flex:1;" onkeydown="if(event.key==='Enter')searchBlock()">
+        <button class="dark-btn dark-btn-cyan" onclick="searchBlock()"><i class="fa-solid fa-search"></i> 搜索</button>
+      </div>
+      <div id="searchResult" style="font-size:11px;color:var(--dark-text-muted);margin-bottom:10px;"></div>
+      <div id="blockList" style="max-height:600px;overflow-y:auto;">加载中...</div>
+    </section>
+
+    <!-- TRANSACTION POOL -->
+    <section id="subpage-pool" class="subpage">
+      <h2 style="font-family:var(--font-title);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+        <span style="color:var(--pink);">⏳</span> 待打包交易池
+      </h2>
+      <div class="dark-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <span style="font-size:13px;color:var(--dark-text-secondary);">待确认交易: <b style="color:var(--dark-text);" id="poolCount">--</b></span>
+          <button class="dark-btn dark-btn-cyan" onclick="loadPool()" style="font-size:11px;padding:5px 12px;"><i class="fa-solid fa-rotate"></i> 刷新</button>
+        </div>
+        <div id="poolList">加载中...</div>
+      </div>
+    </section>
+
+    <!-- USERS -->
+    <section id="subpage-users" class="subpage">
+      <h2 style="font-family:var(--font-title);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+        <span style="color:var(--purple);">👥</span> 用户管理
+      </h2>
+      <div class="dark-card" style="overflow-x:auto;">
+        <table class="dark-table" id="usersTable">
+          <thead><tr><th>用户名</th><th>角色</th><th>钱包数</th><th>注册时间</th></tr></thead>
+          <tbody id="usersTableBody"><tr><td colspan="4" style="text-align:center;color:var(--dark-text-muted);">加载中...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MINING -->
+    <section id="subpage-mining" class="subpage">
+      <h2 style="font-family:var(--font-title);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+        <span style="color:var(--gold);">⛏</span> 挖矿控制
+      </h2>
+      <div class="dark-card" style="max-width:500px;">
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:12px;color:var(--dark-text-secondary);margin-bottom:6px;">矿工地址</label>
+          <input type="text" class="dark-input" id="minerAddress" value="admin_miner" placeholder="矿工地址">
+        </div>
+        <button class="dark-btn dark-btn-purple" onclick="mineBlock()" style="width:100%;padding:12px;">
+          <i class="fa-solid fa-hammer"></i> 手动挖矿
+        </button>
+        <div id="mineResult" style="margin-top:14px;"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+const API = window.location.origin;
+const TOKEN = localStorage.getItem('gamla_token');
+const USERNAME = localStorage.getItem('gamla_username');
+const ROLE = localStorage.getItem('gamla_role');
+
+if (!TOKEN || ROLE !== 'admin') {
+  if (TOKEN) window.location.href = '/dashboard.html';
+  else window.location.href = '/login.html';
+}
+
+document.getElementById('sidebarUsername').textContent = USERNAME;
+
+const headers = () => ({'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN});
+
+async function api(method, path, body) {
+  const opts = { method, headers: headers() };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  const data = await res.json();
+  if (res.status === 401) { localStorage.clear(); window.location.href = '/login.html'; }
+  return data;
+}
+
+function toast(msg, type) {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  t.style.borderLeft = '3px solid ' + ({success:'#68b984',error:'#e07373',info:'#5b7fff'}[type]||'#5b7fff');
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+function switchPage(page, btn) {
+  document.querySelectorAll('.subpage').forEach(s => s.classList.remove('active'));
+  document.getElementById('subpage-' + page).classList.add('active');
+  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'blockchain') loadBlockchain();
+  if (page === 'pool') loadPool();
+  if (page === 'users') loadUsers();
+}
+
+function logout() {
+  api('POST', '/api/v1/auth/logout').finally(() => { localStorage.clear(); window.location.href = '/'; });
+}
+
+function short(h) { if (!h || h.length < 16) return h || '--'; return h.slice(0, 8) + '...' + h.slice(-6); }
+function timeAgo(ts) {
+  if (!ts) return '--';
+  const s = Date.now()/1000 - ts;
+  if (s < 60) return Math.round(s) + 's 前';
+  if (s < 3600) return Math.round(s/60) + 'm 前';
+  return Math.round(s/3600) + 'h 前';
+}
+function fmt(n, d) { if (n == null) return '--'; return Number(n).toLocaleString(undefined, d != null ? {minimumFractionDigits: d, maximumFractionDigits: d} : undefined); }
+
+// DASHBOARD
+async function loadDashboard() {
+  const res = await api('GET', '/api/v1/admin/dashboard');
+  if (!res || !res.ok) return;
+  const d = res.data;
+  document.getElementById('dashboardStats').innerHTML =
+    `<div class="dark-stat-item"><div class="stat-label">区块高度</div><div class="stat-value" style="color:var(--cyan);">#${d.height}</div></div>
+     <div class="dark-stat-item"><div class="stat-label">总交易数</div><div class="stat-value">${fmt(d.total_transactions)}</div></div>
+     <div class="dark-stat-item"><div class="stat-label">待打包交易</div><div class="stat-value" style="color:var(--pink);">${d.pending_count}</div></div>
+     <div class="dark-stat-item"><div class="stat-label">流通总量</div><div class="stat-value" style="color:var(--green);">${fmt(d.total_supply, 0)} GLC</div></div>
+     <div class="dark-stat-item"><div class="stat-label">用户数</div><div class="stat-value" style="color:var(--purple);">${d.user_count}</div></div>
+     <div class="dark-stat-item"><div class="stat-label">钱包数</div><div class="stat-value">${d.wallet_count}</div></div>`;
+  document.getElementById('dashboardInfo').innerHTML =
+    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div>挖矿难度: <b style="color:var(--dark-text);">${d.difficulty}</b></div>
+      <div>挖矿奖励: <b style="color:var(--green);">${fmt(d.mining_reward, 1)} GLC</b></div>
+      <div>节点ID: <b style="color:var(--dark-text);font-family:monospace;">${short(d.node_id)}</b></div>
+      <div>对等节点: <b style="color:var(--dark-text);">${d.nodes?.length || 0}</b></div>
+    </div>`;
+}
+
+// BLOCKCHAIN
+async function loadBlockchain() {
+  const res = await api('GET', '/api/v1/admin/chain');
+  if (!res || !res.ok) { document.getElementById('blockList').innerHTML = '<div style="text-align:center;padding:40px;color:var(--dark-text-muted);">加载失败</div>'; return; }
+  const chain = res.data.chain || [];
+  document.getElementById('blockList').innerHTML = [...chain].reverse().map(b => `
+    <div class="block-item">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-family:'DM Sans',sans-serif;font-weight:700;color:var(--cyan);">#${b.index}</span>
+        <span style="font-size:11px;color:var(--dark-text-muted);">${timeAgo(b.timestamp)}</span>
+      </div>
+      <div style="font-size:11px;color:var(--dark-text-secondary);margin-bottom:2px;">${short(b.hash)} ← ${short(b.previous_hash)}</div>
+      <div style="font-size:10px;color:var(--dark-text-muted);display:flex;gap:12px;">
+        <span>TXs: ${b.transactions?.length || 0}</span>
+        <span>Nonce: ${b.nonce}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function searchBlock() {
+  const q = document.getElementById('blockSearch').value.trim();
+  const el = document.getElementById('searchResult');
+  if (!q) { el.textContent = ''; return; }
+  el.textContent = '搜索中...';
+  api('GET', '/api/v1/admin/chain').then(res => {
+    if (!res || !res.ok) { el.textContent = '搜索失败'; return; }
+    const chain = res.data.chain || [];
+    const byHeight = chain.find(b => b.index === parseInt(q.replace('#', '')));
+    if (byHeight) {
+      el.innerHTML = '<span style="color:var(--green);">✅ 找到 #' + byHeight.index + ' — Hash: ' + short(byHeight.hash) + '</span>';
+      // Scroll to it
+      const items = document.querySelectorAll('.block-item');
+      const idx = chain.length - 1 - byHeight.index;
+      if (items[idx]) items[idx].scrollIntoView({behavior:'smooth',block:'center'});
+      return;
+    }
+    const byAddr = chain.filter(b => b.transactions?.some(tx => tx.sender === q || tx.receiver === q));
+    if (byAddr.length) {
+      el.innerHTML = '<span style="color:var(--cyan);">✅ 在 ' + byAddr.length + ' 个区块中找到相关交易</span>';
+    } else {
+      el.innerHTML = '<span style="color:var(--pink);">❌ 未找到匹配的区块或地址</span>';
+    }
+  });
+}
+
+// TRANSACTION POOL
+async function loadPool() {
+  const res = await api('GET', '/api/v1/admin/pending');
+  document.getElementById('poolCount').textContent = res?.count || 0;
+  const txs = res?.data || [];
+  const el = document.getElementById('poolList');
+  if (txs.length === 0) { el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--dark-text-muted);">交易池为空</div>'; return; }
+  el.innerHTML = txs.map(tx => `
+    <div class="tx-pool-item">
+      <span style="color:var(--dark-text-muted);">${short(tx.tx_hash)}</span>
+      <span style="color:var(--dark-text-secondary);">${short(tx.sender)} → ${short(tx.receiver)}</span>
+      <span style="color:var(--pink);font-weight:600;">${Number(tx.amount).toFixed(4)} GLC</span>
+    </div>
+  `).join('');
+}
+
+// USERS
+async function loadUsers() {
+  const res = await api('GET', '/api/v1/admin/users');
+  const users = res?.users || [];
+  document.getElementById('usersTableBody').innerHTML = users.map(u => `
+    <tr>
+      <td style="color:var(--dark-text);font-weight:600;">${u.username}</td>
+      <td><span class="${u.role==='admin'?'badge-purple':'badge-cyan'}">${u.role==='admin'?'管理员':'用户'}</span></td>
+      <td>${u.wallet_count}</td>
+      <td style="font-size:11px;">${new Date(u.created_at * 1000).toLocaleDateString('zh-CN')}</td>
+    </tr>
+  `).join('');
+}
+
+// MINING
+async function mineBlock() {
+  const miner = document.getElementById('minerAddress').value.trim() || 'admin_miner';
+  const el = document.getElementById('mineResult');
+  el.innerHTML = '<div style="color:var(--cyan);font-size:13px;"><i class="fa-solid fa-spinner fa-spin"></i> 挖矿中...</div>';
+  const res = await api('POST', '/api/v1/admin/mine?miner_address=' + encodeURIComponent(miner));
+  if (res && res.ok) {
+    el.innerHTML = '<div style="color:var(--green);font-size:13px;">✅ 区块 <b>#' + res.data.index + '</b> 挖矿成功！Hash: ' + short(res.data.hash) + '</div>';
+    toast('区块 #' + res.data.index + ' 已出块', 'success');
+  } else {
+    el.innerHTML = '<div style="color:#ef4444;font-size:13px;">❌ 挖矿失败: ' + (res?.detail || '未知错误') + '</div>';
+  }
+}
+
+// INIT
+loadDashboard();
+</script>
+
+</body>
+</html>

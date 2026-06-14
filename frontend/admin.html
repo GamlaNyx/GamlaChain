@@ -226,17 +226,9 @@
       </div>
     </section>
 
-    <!-- BLOCKCHAIN -->
-    <section id="subpage-blockchain" class="subpage">
-      <h2 style="font-family:var(--font-title);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
-        <span style="color:var(--cyan);">⛓</span> 区块链浏览器
-      </h2>
-      <div class="dark-card" style="display:flex;gap:8px;margin-bottom:14px;">
-        <input type="text" class="dark-input" id="blockSearch" placeholder="#区块号 或 0x地址..." style="flex:1;" onkeydown="if(event.key==='Enter')searchBlock()">
-        <button class="dark-btn dark-btn-cyan" onclick="searchBlock()"><i class="fa-solid fa-search"></i> 搜索</button>
-      </div>
-      <div id="searchResult" style="font-size:11px;color:var(--dark-text-muted);margin-bottom:10px;"></div>
-      <div id="blockList" style="max-height:600px;overflow-y:auto;">加载中...</div>
+    <!-- BLOCKCHAIN (full original explorer via iframe) -->
+    <section id="subpage-blockchain" class="subpage" style="padding:0;margin:0;">
+      <iframe id="explorerFrame" src="original_explorer.html" style="width:100%;height:calc(100vh - 64px);border:none;display:block;"></iframe>
     </section>
 
     <!-- TRANSACTION POOL -->
@@ -328,7 +320,6 @@ function switchPage(page, btn) {
   document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
   if (btn) btn.classList.add('active');
   if (page === 'dashboard') loadDashboard();
-  if (page === 'blockchain') loadBlockchain();
   if (page === 'pool') loadPool();
   if (page === 'users') loadUsers();
 }

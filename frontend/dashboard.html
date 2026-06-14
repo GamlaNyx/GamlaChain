@@ -391,15 +391,22 @@ async function claimFaucet() {
 
 // ADMIN ENTRY on overview
 function addAdminEntry() {
-  const el = document.getElementById('ovRecentTxs');
-  if (!el || ROLE !== 'admin') return;
+  if (ROLE !== 'admin') return;
+  const overview = document.getElementById('subpage-overview');
+  const grid = overview.querySelector('.overview-grid');
+  if (!grid) return;
+  // Remove any existing admin entry to avoid duplicates
+  const existing = document.getElementById('adminEntryCard');
+  if (existing) existing.remove();
   const card = document.createElement('div');
+  card.id = 'adminEntryCard';
   card.className = 'card';
-  card.style.cssText = 'margin-top:16px;text-align:center;padding:16px 24px;';
-  card.innerHTML = '<div style="font-size:14px;font-weight:600;margin-bottom:8px;">🔧 管理员入口</div>' +
-    '<p class="text-sm text-muted mb-3">管理区块链状态、查看用户、手动挖矿</p>' +
-    '<a href="admin.html" class="btn btn-accent btn-sm"><i class="fa-solid fa-shield-halved"></i> 进入管理控制台</a>';
-  el.parentNode.insertBefore(card, el.nextSibling);
+  card.style.cssText = 'margin-bottom:16px;text-align:center;padding:20px 24px;border-left:4px solid var(--accent);';
+  card.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;">' +
+    '<div style="text-align:left;"><div style="font-size:14px;font-weight:700;color:var(--accent);margin-bottom:4px;">🔧 管理员控制台</div><div class="text-sm text-muted">管理区块链、用户与挖矿</div></div>' +
+    '<a href="admin.html" class="btn btn-accent"><i class="fa-solid fa-shield-halved"></i> 进入控制台</a>' +
+    '</div>';
+  grid.parentNode.insertBefore(card, grid.nextSibling);
 }
 
 function short(h) { if (!h || h.length < 16) return h || '--'; return h.slice(0, 8) + '...' + h.slice(-6); }

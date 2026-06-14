@@ -9,6 +9,7 @@ from gamla_chain.api.middleware import init_auth_middleware
 from gamla_chain.api.routes_auth import init_auth_routes
 from gamla_chain.api.routes_wallet import init_wallet_routes
 from gamla_chain.api.routes_admin import init_admin_routes
+from gamla_chain.api.routes_faucet import init_faucet_routes
 from gamla_chain.api.server import create_app
 
 
@@ -39,6 +40,7 @@ def main():
     init_auth_routes(auth_manager, wallet_manager)
     init_wallet_routes(wallet_manager, manager.blockchain)
     init_admin_routes(auth_manager, wallet_manager, manager.blockchain)
+    init_faucet_routes(wallet_manager, manager.blockchain, persistence)
 
     app = create_app(static_dir=config.static_dir)
     print(f"[startup] GamlaChain v0.2.0 starting on {config.host}:{config.port}")

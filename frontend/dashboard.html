@@ -43,9 +43,12 @@
     <button class="sidebar-item" data-page="history" onclick="switchPage('history', this)">
       <i class="fa-solid fa-clock-rotate-left"></i> 交易记录
     </button>
+    <button class="sidebar-item" data-page="faucet" onclick="switchPage('faucet', this)">
+      <i class="fa-solid fa-droplet"></i> 水龙头
+    </button>
     <div class="sidebar-divider"></div>
-    <a href="admin.html" class="sidebar-item" id="adminLink" style="display:none;">
-      <i class="fa-solid fa-shield-halved"></i> 管理控制台
+    <a href="admin.html" class="sidebar-item" id="adminLink" style="display:none;color:var(--accent);font-weight:600;">
+      <i class="fa-solid fa-shield-halved"></i> 🔧 管理控制台
     </a>
     <button class="sidebar-item danger" onclick="logout()">
       <i class="fa-solid fa-right-from-bracket"></i> 登出
@@ -127,6 +130,32 @@
       <div id="historyList"><p class="section-empty">选择钱包查看交易记录</p></div>
     </section>
 
+    <!-- FAUCET -->
+    <section id="subpage-faucet" class="subpage">
+      <h2 style="margin-bottom:8px;"><i class="fa-solid fa-droplet" style="color:var(--accent);"></i> 水龙头</h2>
+      <p class="text-sm text-muted mb-3">每个账户可领取 <b id="fcMaxClaims">3</b> 次，每次 <b id="fcAmount">10</b> GLC</p>
+
+      <div class="card" style="max-width:480px;">
+        <div class="flex-between mb-3">
+          <span style="font-weight:600;">已领取: <b id="fcClaimed" style="color:var(--accent);">--</b> 次</span>
+          <span style="font-weight:600;">剩余: <b id="fcRemaining" style="color:var(--success);">--</b> 次</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">接收钱包</label>
+          <select id="fcWallet" class="select"></select>
+        </div>
+        <button class="btn btn-accent" style="width:100%;" id="fcClaimBtn" onclick="claimFaucet()">
+          <i class="fa-solid fa-droplet"></i> 领取 10 GLC
+        </button>
+        <div id="fcResult" class="mt-2"></div>
+      </div>
+    </section>
+
+    <!-- ADMIN ENTRY CARD (visible on overview for admin) -->
+    <section id="subpage-admin-entry" class="subpage" style="display:none;">
+      <!-- This section is never shown directly; admin entry is on overview -->
+    </section>
+
   </main>
 </div>
 
@@ -170,6 +199,7 @@ function switchPage(page, btn) {
   if (page === 'wallets') loadWallets();
   if (page === 'transfer') loadWalletsForTransfer();
   if (page === 'history') loadWalletHistory();
+  if (page === 'faucet') loadFaucet();
 }
 
 function logout() {
@@ -219,6 +249,7 @@ async function loadOverview() {
         <span style="color:${isIn ? 'var(--success)' : 'var(--danger)'}; font-weight:600;">${isIn ? '+' : '-'}${Number(tx.amount).toFixed(4)} GLC</span>
       </div>`;
     }).join('');
+    addAdminEntry();
   } catch (e) { console.error(e); }
 }
 
@@ -312,6 +343,63 @@ async function loadWalletHistory() {
     }).join('') + '</div>';
   }
   document.getElementById('historyList').innerHTML = html;
+}
+
+// FAUCET
+async function loadFaucet() {
+  const info = await api('GET', '/api/v1/faucet/info');
+  if (info && info.ok) {
+    document.getElementById('fcClaimed').textContent = info.data.claimed;
+    document.getElementById('fcRemaining').textContent = info.data.remaining;
+    document.getElementById('fcMaxClaims').textContent = info.data.max_claims;
+    document.getElementById('fcAmount').textContent = info.data.claim_amount;
+    const btn = document.getElementById('fcClaimBtn');
+    if (info.data.remaining <= 0) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-ban"></i> 已达领取上限';
+      btn.style.opacity = '0.5';
+    }
+  }
+  // Load wallets for selection
+  const me = await api('GET', '/api/v1/auth/me');
+  if (me && me.ok) {
+    const sel = document.getElementById('fcWallet');
+    sel.innerHTML = (me.wallets || []).map(w =>
+      `<option value="${w.address}">${w.label} — ${w.address.slice(0,12)}...</option>`
+    ).join('');
+  }
+}
+
+async function claimFaucet() {
+  const addr = document.getElementById('fcWallet').value;
+  if (!addr) { toast('请先选择一个钱包', 'error'); return; }
+  const btn = document.getElementById('fcClaimBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 领取中...';
+  document.getElementById('fcResult').innerHTML = '';
+  const res = await api('POST', '/api/v1/faucet/claim', {wallet_address: addr});
+  if (res && res.ok) {
+    document.getElementById('fcResult').innerHTML = '<div class="alert alert-success">✅ ' + res.message + ' (TX: <span class="text-mono text-xs">' + short(res.tx_hash) + '</span>)</div>';
+    toast('领取成功！+10 GLC', 'success');
+    loadFaucet();
+  } else {
+    document.getElementById('fcResult').innerHTML = '<div class="alert alert-error">❌ ' + (res?.detail || '领取失败') + '</div>';
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-droplet"></i> 领取 10 GLC';
+  }
+}
+
+// ADMIN ENTRY on overview
+function addAdminEntry() {
+  const el = document.getElementById('ovRecentTxs');
+  if (!el || ROLE !== 'admin') return;
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.style.cssText = 'margin-top:16px;text-align:center;padding:16px 24px;';
+  card.innerHTML = '<div style="font-size:14px;font-weight:600;margin-bottom:8px;">🔧 管理员入口</div>' +
+    '<p class="text-sm text-muted mb-3">管理区块链状态、查看用户、手动挖矿</p>' +
+    '<a href="admin.html" class="btn btn-accent btn-sm"><i class="fa-solid fa-shield-halved"></i> 进入管理控制台</a>';
+  el.parentNode.insertBefore(card, el.nextSibling);
 }
 
 function short(h) { if (!h || h.length < 16) return h || '--'; return h.slice(0, 8) + '...' + h.slice(-6); }

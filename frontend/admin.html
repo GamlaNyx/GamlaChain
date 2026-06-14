@@ -290,7 +290,7 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
-const API = window.location.origin;
+const API = window.location.protocol === 'file:' ? 'http://127.0.0.1:8000' : window.location.origin;
 const TOKEN = localStorage.getItem('gamla_token');
 const USERNAME = localStorage.getItem('gamla_username');
 const ROLE = localStorage.getItem('gamla_role');

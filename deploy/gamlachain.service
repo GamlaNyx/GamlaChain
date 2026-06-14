@@ -1,0 +1,19 @@
+[Unit]
+Description=GamlaChain Blockchain Server
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/gamlachain
+Environment=HOST=0.0.0.0
+Environment=PORT=8000
+Environment=MINING_DIFFICULTY=4
+Environment=MINING_REWARD=50.0
+Environment=DATA_DIR=/opt/gamlachain/data
+ExecStart=/usr/bin/python3 -m gamla_chain
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

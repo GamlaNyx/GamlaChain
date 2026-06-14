@@ -19,6 +19,25 @@ async def get_chain():
     return {"ok": True, "data": chain_data}
 
 
+@router.get("/chain/info")
+async def get_chain_info():
+    """Public chain summary (no auth required)."""
+    chain = manager.blockchain
+    total_tx = sum(len(b.transactions) for b in chain.chain)
+    return {
+        "ok": True,
+        "data": {
+            "height": len(chain.chain),
+            "difficulty": chain.difficulty,
+            "mining_reward": chain.mining_reward,
+            "latest_block_hash": chain.last_block.hash,
+            "latest_block_time": chain.last_block.timestamp,
+            "pending_count": len(chain.pending_transactions),
+            "total_transactions": total_tx,
+        },
+    }
+
+
 @router.get("/blocks/latest")
 async def get_latest_block():
     block = manager.blockchain.last_block

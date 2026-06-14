@@ -20,6 +20,7 @@ class Blockchain:
     mining_reward: float = default_config.mining_reward
     nodes: set[str] = field(default_factory=set)
     node_identifier: str = field(default_factory=lambda: str(uuid4()).replace("-", ""))
+    _persist_callback: object = field(default=None, repr=False)
 
     def __post_init__(self):
         if not self.chain:
@@ -30,6 +31,18 @@ class Blockchain:
         genesis = proof_of_work(genesis, self.difficulty)
         return genesis
 
+    def set_persist_callback(self, callback):
+        """Set a callback(saved_chain_data) to be called after chain changes."""
+        self._persist_callback = callback
+
+    def _notify_persist(self):
+        if self._persist_callback:
+            chain_data = {
+                "chain": [b.to_dict() for b in self.chain],
+                "pending_transactions": [tx.to_dict() for tx in self.pending_transactions],
+            }
+            self._persist_callback(chain_data)
+
     @property
     def last_block(self) -> Block:
         return self.chain[-1]
@@ -37,6 +50,7 @@ class Blockchain:
     def add_transaction(self, tx: Transaction) -> int:
         """Add a transaction to pending pool. Returns its index in the pool."""
         self.pending_transactions.append(tx)
+        self._notify_persist()
         return len(self.pending_transactions) - 1
 
     def mine_pending_transactions(self, miner_address: str = "network") -> Block:
@@ -52,6 +66,7 @@ class Blockchain:
         block = proof_of_work(block, self.difficulty)
         self.chain.append(block)
         self.pending_transactions = []
+        self._notify_persist()
         return block
 
     def is_chain_valid(self) -> bool:
@@ -139,6 +154,7 @@ class Blockchain:
 
         if new_chain:
             self.chain = [Block.from_dict(b) for b in new_chain]
+            self._notify_persist()
             return True
         return False
 

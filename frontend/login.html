@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登录 — GamlaChain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="css/neumorphism.css">
+<style>
+  .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .auth-card { width: 100%; max-width: 400px; }
+  .auth-card .auth-header { text-align: center; margin-bottom: 28px; }
+  .auth-card .auth-header .logo { width: 56px; height: 56px; border-radius: 14px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 14px; box-shadow: 4px 4px 8px rgba(91, 127, 255, 0.3); }
+  .auth-card h2 { font-size: 1.3rem; margin-bottom: 4px; }
+  .auth-card .auth-subtitle { color: var(--text-secondary); font-size: 14px; }
+  .auth-card .auth-link { text-align: center; margin-top: 20px; font-size: 14px; color: var(--text-secondary); }
+  .auth-card .auth-link a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .auth-card .auth-link a:hover { text-decoration: underline; }
+</style>
+</head>
+<body class="auth-page">
+
+<div class="auth-card">
+  <div class="card">
+    <div class="auth-header">
+      <div class="logo"><i class="fa-solid fa-cubes"></i></div>
+      <h2>欢迎回来</h2>
+      <p class="auth-subtitle">登录你的 GamlaChain 账户</p>
+    </div>
+    <div id="errorMsg" class="hidden"></div>
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label class="form-label">用户名</label>
+        <input type="text" id="username" class="input" placeholder="输入用户名" required minlength="2" autofocus>
+      </div>
+      <div class="form-group">
+        <label class="form-label">密码</label>
+        <input type="password" id="password" class="input" placeholder="输入密码" required minlength="4">
+      </div>
+      <button type="submit" class="btn btn-accent" style="width:100%;" id="submitBtn"><i class="fa-solid fa-arrow-right-to-bracket"></i> 登录</button>
+    </form>
+    <p class="auth-link">还没有账户？<a href="/register.html">立即注册</a></p>
+    <p class="auth-link" style="margin-top:8px;"><a href="/">&larr; 返回首页</a></p>
+  </div>
+</div>
+
+<script>
+const API_BASE = window.location.origin;
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.className = 'alert alert-error';
+  el.classList.remove('hidden');
+}
+async function handleLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 登录中...';
+  document.getElementById('errorMsg').classList.add('hidden');
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  try {
+    const res = await fetch(API_BASE + '/api/v1/auth/login', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
+    const data = await res.json();
+    if(!res.ok||!data.ok){showError(data.detail||'登录失败');btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-arrow-right-to-bracket"></i> 登录';return;}
+    localStorage.setItem('gamla_token',data.token);
+    localStorage.setItem('gamla_username',data.username);
+    localStorage.setItem('gamla_role',data.role);
+    window.location.href = data.role==='admin'?'/admin.html':'/dashboard.html';
+  }catch(err){showError('网络错误，请检查服务器是否运行');btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-arrow-right-to-bracket"></i> 登录';}
+}
+</script>
+
+</body>
+</html>

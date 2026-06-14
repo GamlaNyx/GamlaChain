@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>注册 — GamlaChain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="css/neumorphism.css">
+<style>
+  .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .auth-card { width: 100%; max-width: 400px; }
+  .auth-card .auth-header { text-align: center; margin-bottom: 28px; }
+  .auth-card .auth-header .logo { width: 56px; height: 56px; border-radius: 14px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 14px; box-shadow: 4px 4px 8px rgba(91, 127, 255, 0.3); }
+  .auth-card h2 { font-size: 1.3rem; margin-bottom: 4px; }
+  .auth-card .auth-subtitle { color: var(--text-secondary); font-size: 14px; }
+  .auth-card .auth-link { text-align: center; margin-top: 20px; font-size: 14px; color: var(--text-secondary); }
+  .auth-card .auth-link a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .auth-card .auth-link a:hover { text-decoration: underline; }
+</style>
+</head>
+<body class="auth-page">
+
+<div class="auth-card">
+  <div class="card">
+    <div class="auth-header">
+      <div class="logo"><i class="fa-solid fa-user-plus"></i></div>
+      <h2>创建账户</h2>
+      <p class="auth-subtitle">注册即自动创建你的第一个钱包</p>
+    </div>
+    <div id="msgBox" class="hidden"></div>
+    <form id="registerForm" onsubmit="handleRegister(event)">
+      <div class="form-group">
+        <label class="form-label">用户名</label>
+        <input type="text" id="username" class="input" placeholder="2-32 个字符" required minlength="2" maxlength="32" autofocus>
+      </div>
+      <div class="form-group">
+        <label class="form-label">密码</label>
+        <input type="password" id="password" class="input" placeholder="至少 4 个字符" required minlength="4" maxlength="128">
+      </div>
+      <div class="form-group">
+        <label class="form-label">确认密码</label>
+        <input type="password" id="confirmPassword" class="input" placeholder="再次输入密码" required minlength="4">
+      </div>
+      <button type="submit" class="btn btn-accent" style="width:100%;" id="submitBtn"><i class="fa-solid fa-user-plus"></i> 注册</button>
+    </form>
+    <p class="auth-link">已有账户？<a href="/login.html">去登录</a></p>
+    <p class="auth-link" style="margin-top:8px;"><a href="/">&larr; 返回首页</a></p>
+  </div>
+</div>
+
+<script>
+const API_BASE = window.location.origin;
+function showMsg(msg,type){
+  const el=document.getElementById('msgBox');
+  el.textContent=msg;
+  el.className=type==='error'?'alert alert-error':'alert alert-success';
+  el.classList.remove('hidden');
+}
+async function handleRegister(e){
+  e.preventDefault();
+  const btn=document.getElementById('submitBtn');
+  const pwd=document.getElementById('password').value;
+  const confirm=document.getElementById('confirmPassword').value;
+  if(pwd!==confirm){showMsg('两次输入的密码不一致','error');return;}
+  btn.disabled=true;
+  btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> 注册中...';
+  document.getElementById('msgBox').classList.add('hidden');
+  const username=document.getElementById('username').value.trim();
+  try{
+    const res=await fetch(API_BASE+'/api/v1/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password:pwd})});
+    const data=await res.json();
+    if(!res.ok||!data.ok){showMsg(data.detail||'注册失败','error');btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-user-plus"></i> 注册';return;}
+    showMsg('注册成功！正在跳转到登录页...','success');
+    setTimeout(()=>{window.location.href='/login.html';},1500);
+  }catch(err){showMsg('网络错误，请检查服务器是否运行','error');btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-user-plus"></i> 注册';}
+}
+</script>
+
+</body>
+</html>

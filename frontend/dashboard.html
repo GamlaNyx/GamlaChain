@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>仪表盘 — GamlaChain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="css/neumorphism.css">
+<style>
+  .subpage { display: none; }
+  .subpage.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .overview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 28px; }
+  .tx-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-light); }
+  .tx-row:last-child { border-bottom: none; }
+  .tx-direction { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; min-width: 80px; }
+  .private-key-field { margin-top: 8px; display: flex; gap: 8px; }
+  .private-key-field .input { flex: 1; font-size: 12px; }
+  .section-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-style: italic; }
+  @media (max-width: 768px) { .overview-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="sidebar-layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div style="padding: 8px 12px 16px; font-family:var(--font-title); font-weight:700; font-size:16px; display:flex; align-items:center; gap:8px;">
+      <div class="logo-icon" style="width:32px;height:32px;font-size:14px;border-radius:8px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-cubes"></i></div>
+      GamlaChain
+    </div>
+    <button class="sidebar-item active" data-page="overview" onclick="switchPage('overview', this)">
+      <i class="fa-solid fa-gauge-high"></i> 总览
+    </button>
+    <button class="sidebar-item" data-page="wallets" onclick="switchPage('wallets', this)">
+      <i class="fa-solid fa-wallet"></i> 我的钱包
+    </button>
+    <button class="sidebar-item" data-page="transfer" onclick="switchPage('transfer', this)">
+      <i class="fa-solid fa-paper-plane"></i> 转账
+    </button>
+    <button class="sidebar-item" data-page="history" onclick="switchPage('history', this)">
+      <i class="fa-solid fa-clock-rotate-left"></i> 交易记录
+    </button>
+    <div class="sidebar-divider"></div>
+    <a href="/admin.html" class="sidebar-item" id="adminLink" style="display:none;">
+      <i class="fa-solid fa-shield-halved"></i> 管理控制台
+    </a>
+    <button class="sidebar-item danger" onclick="logout()">
+      <i class="fa-solid fa-right-from-bracket"></i> 登出
+    </button>
+    <div class="sidebar-user">
+      <div class="username" id="sidebarUsername">--</div>
+      <div class="role-badge" id="sidebarRole">--</div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- OVERVIEW -->
+    <section id="subpage-overview" class="subpage active">
+      <h2 style="margin-bottom:20px;">👋 你好，<span id="ovUsername">--</span></h2>
+      <div class="overview-grid">
+        <div class="stat-card">
+          <div class="stat-label">总余额</div>
+          <div class="stat-value success" id="ovTotalBalance">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">交易次数</div>
+          <div class="stat-value accent" id="ovTxCount">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">钱包数量</div>
+          <div class="stat-value" id="ovWalletCount">--</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:12px;">最近交易</h3>
+        <div id="ovRecentTxs"><p class="section-empty">加载中...</p></div>
+      </div>
+    </section>
+
+    <!-- WALLETS -->
+    <section id="subpage-wallets" class="subpage">
+      <div class="flex-between mb-3">
+        <h2>我的钱包</h2>
+        <button class="btn btn-accent btn-sm" onclick="createWallet()">
+          <i class="fa-solid fa-plus"></i> 创建新钱包
+        </button>
+      </div>
+      <div id="walletList"><p class="section-empty">加载中...</p></div>
+    </section>
+
+    <!-- TRANSFER -->
+    <section id="subpage-transfer" class="subpage">
+      <h2 style="margin-bottom:20px;">转账</h2>
+      <div class="card" style="max-width:520px;">
+        <div class="form-group">
+          <label class="form-label">发送钱包</label>
+          <select id="txFromWallet" class="select"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">接收地址</label>
+          <input type="text" id="txToAddress" class="input input-mono" placeholder="0x...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">金额 (GLC)</label>
+          <input type="number" id="txAmount" class="input" placeholder="0.00" step="0.0001" min="0.0001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">发送钱包私钥</label>
+          <input type="password" id="txPrivateKey" class="input input-mono" placeholder="输入私钥以签名交易">
+        </div>
+        <p class="text-sm text-muted mb-3"><i class="fa-solid fa-circle-info"></i> 手续费: 0 GLC</p>
+        <button class="btn btn-accent" style="width:100%;" onclick="sendTransaction()">
+          <i class="fa-solid fa-paper-plane"></i> 确认转账
+        </button>
+        <div id="txResult" class="mt-2"></div>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="subpage-history" class="subpage">
+      <h2 style="margin-bottom:20px;">交易记录</h2>
+      <div id="historyList"><p class="section-empty">选择钱包查看交易记录</p></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+const API = window.location.origin;
+const TOKEN = localStorage.getItem('gamla_token');
+const USERNAME = localStorage.getItem('gamla_username');
+const ROLE = localStorage.getItem('gamla_role');
+
+if (!TOKEN) { window.location.href = '/login.html'; }
+
+const headers = () => ({'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN});
+
+async function api(method, path, body) {
+  const opts = { method, headers: headers() };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  const data = await res.json();
+  if (res.status === 401) { localStorage.clear(); window.location.href = '/login.html'; }
+  return data;
+}
+
+function toast(msg, type) {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  t.style.borderLeft = '3px solid ' + ({success:'#68b984',error:'#e07373',info:'#5b7fff'}[type]||'#5b7fff');
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+function switchPage(page, btn) {
+  document.querySelectorAll('.subpage').forEach(s => s.classList.remove('active'));
+  document.getElementById('subpage-' + page).classList.add('active');
+  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (page === 'overview') loadOverview();
+  if (page === 'wallets') loadWallets();
+  if (page === 'transfer') loadWalletsForTransfer();
+  if (page === 'history') loadWalletHistory();
+}
+
+function logout() {
+  api('POST', '/api/v1/auth/logout').finally(() => { localStorage.clear(); window.location.href = '/'; });
+}
+
+// INIT
+(async function init() {
+  if (ROLE === 'admin') document.getElementById('adminLink').style.display = 'flex';
+  document.getElementById('sidebarUsername').textContent = USERNAME;
+  document.getElementById('sidebarRole').textContent = ROLE === 'admin' ? '管理员' : '用户';
+  document.getElementById('ovUsername').textContent = USERNAME;
+  await loadOverview();
+})();
+
+// OVERVIEW
+async function loadOverview() {
+  try {
+    const me = await api('GET', '/api/v1/auth/me');
+    if (!me || !me.ok) return;
+    const wallets = me.wallets || [];
+    let totalBalance = 0, totalTx = 0;
+    for (const w of wallets) {
+      const bal = await api('GET', '/api/v1/wallet/' + w.address + '/balance');
+      if (bal && bal.ok) totalBalance += bal.balance;
+      const hist = await api('GET', '/api/v1/wallet/' + w.address + '/history');
+      if (hist && hist.ok) totalTx += hist.count;
+    }
+    document.getElementById('ovTotalBalance').textContent = totalBalance.toFixed(4) + ' GLC';
+    document.getElementById('ovTxCount').textContent = totalTx;
+    document.getElementById('ovWalletCount').textContent = wallets.length;
+
+    let allTxs = [];
+    for (const w of wallets) {
+      const hist = await api('GET', '/api/v1/wallet/' + w.address + '/history');
+      if (hist && hist.ok) allTxs = allTxs.concat(hist.transactions.map(tx => ({...tx, _wallet: w})));
+    }
+    allTxs.sort((a, b) => b.timestamp - a.timestamp);
+    const recent = allTxs.slice(0, 10);
+    const el = document.getElementById('ovRecentTxs');
+    if (recent.length === 0) { el.innerHTML = '<p class="section-empty">暂无交易记录</p>'; return; }
+    el.innerHTML = recent.map(tx => {
+      const isIn = tx.receiver === tx._wallet.address;
+      return `<div class="tx-row">
+        <span class="tx-direction" style="color:${isIn ? 'var(--success)' : 'var(--danger)'}">${isIn ? '↓ 收入' : '↑ 支出'}</span>
+        <span class="text-mono text-sm" style="color:var(--text-secondary);">${isIn ? short(tx.sender) : short(tx.receiver)}</span>
+        <span style="color:${isIn ? 'var(--success)' : 'var(--danger)'}; font-weight:600;">${isIn ? '+' : '-'}${Number(tx.amount).toFixed(4)} GLC</span>
+      </div>`;
+    }).join('');
+  } catch (e) { console.error(e); }
+}
+
+// WALLETS
+async function loadWallets() {
+  const me = await api('GET', '/api/v1/auth/me');
+  if (!me || !me.ok) return;
+  const wallets = me.wallets || [];
+  const el = document.getElementById('walletList');
+  if (wallets.length === 0) { el.innerHTML = '<p class="section-empty">暂无钱包，点击上方按钮创建</p>'; return; }
+  const balances = await Promise.all(wallets.map(w => api('GET', '/api/v1/wallet/' + w.address + '/balance')));
+  el.innerHTML = wallets.map((w, i) => {
+    const bal = balances[i];
+    const balance = (bal && bal.ok) ? Number(bal.balance).toFixed(4) : '--';
+    return `<div class="wallet-card">
+      <div class="wallet-header">
+        <span class="wallet-label">${w.label}</span>
+        <span class="text-xs text-muted">${new Date(w.created_at * 1000).toLocaleDateString('zh-CN')}</span>
+      </div>
+      <div class="wallet-address">${w.address}</div>
+      <div class="wallet-balance">${balance} GLC</div>
+      <div class="private-key-field">
+        <input type="password" class="input input-mono" id="pk-${i}" value="${w.private_key || ''}" readonly style="font-size:11px;">
+        <button class="btn btn-primary btn-sm" onclick="togglePK(${i})" style="white-space:nowrap;">👁 显示</button>
+        <button class="btn btn-primary btn-sm" onclick="copyAddr('${w.address}')">📋</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function togglePK(i) { const el = document.getElementById('pk-' + i); el.type = el.type === 'password' ? 'text' : 'password'; }
+function copyAddr(addr) { navigator.clipboard.writeText(addr).then(() => toast('地址已复制', 'success')); }
+
+async function createWallet() {
+  const label = prompt('钱包标签（可选）：', '');
+  const res = await api('POST', '/api/v1/wallet/create', {label: label || ''});
+  if (res && res.ok) { toast('钱包创建成功！', 'success'); loadWallets(); }
+  else { toast(res?.detail || '创建失败', 'error'); }
+}
+
+// TRANSFER
+async function loadWalletsForTransfer() {
+  const me = await api('GET', '/api/v1/auth/me');
+  if (!me || !me.ok) return;
+  const sel = document.getElementById('txFromWallet');
+  sel.innerHTML = (me.wallets || []).map(w =>
+    `<option value="${w.address}" data-pk="${w.private_key || ''}">${w.label} — ${w.address.slice(0,12)}...</option>`
+  ).join('');
+}
+
+async function sendTransaction() {
+  const sel = document.getElementById('txFromWallet');
+  const sender_address = sel.value;
+  const private_key = document.getElementById('txPrivateKey').value.trim();
+  const receiver_address = document.getElementById('txToAddress').value.trim();
+  const amount = parseFloat(document.getElementById('txAmount').value);
+
+  if (!sender_address || !receiver_address || !amount || amount <= 0) { toast('请填写完整信息', 'error'); return; }
+  if (!receiver_address.startsWith('0x')) { toast('接收地址必须以 0x 开头', 'error'); return; }
+  if (!private_key) { toast('请输入发送钱包的私钥', 'error'); return; }
+
+  const res = await api('POST', '/api/v1/wallet/send', {sender_address, receiver_address, amount, private_key});
+  const el = document.getElementById('txResult');
+  if (res && res.ok) {
+    el.innerHTML = '<div class="alert alert-success">✅ 交易已发送！TX Hash: <span class="text-mono text-xs">' + res.tx_hash + '</span></div>';
+    document.getElementById('txToAddress').value = ''; document.getElementById('txAmount').value = ''; document.getElementById('txPrivateKey').value = '';
+    toast('交易已广播到交易池', 'success');
+  } else {
+    el.innerHTML = '<div class="alert alert-error">❌ ' + (res?.detail || '发送失败') + '</div>';
+  }
+}
+
+// HISTORY
+async function loadWalletHistory() {
+  const me = await api('GET', '/api/v1/auth/me');
+  if (!me || !me.ok) return;
+  const wallets = me.wallets || [];
+  if (wallets.length === 0) { document.getElementById('historyList').innerHTML = '<p class="section-empty">暂无钱包</p>'; return; }
+  let html = '';
+  for (const w of wallets) {
+    const hist = await api('GET', '/api/v1/wallet/' + w.address + '/history');
+    html += '<h4 style="margin-bottom:8px; margin-top:16px;"><i class="fa-solid fa-wallet" style="color:var(--accent);margin-right:6px;"></i>' + w.label + ' <span class="text-mono text-xs text-muted">' + w.address.slice(0,14) + '...</span></h4>';
+    if (!hist || !hist.ok || !hist.transactions.length) { html += '<p class="text-sm text-muted" style="margin-bottom:14px;">暂无交易</p>'; continue; }
+    html += '<div class="inset" style="margin-bottom:14px;">' + hist.transactions.reverse().map(tx => {
+      const isIn = tx.receiver === w.address;
+      return `<div class="tx-row">
+        <span class="tx-direction" style="color:${isIn?'var(--success)':'var(--danger)'}">${isIn?'↓ 收入':'↑ 支出'}</span>
+        <span class="text-mono text-xs" style="color:var(--text-secondary);">${short(isIn?tx.sender:tx.receiver)}</span>
+        <span style="color:${isIn?'var(--success)':'var(--danger)'};font-weight:600;">${isIn?'+':'-'}${Number(tx.amount).toFixed(4)} GLC</span>
+      </div>`;
+    }).join('') + '</div>';
+  }
+  document.getElementById('historyList').innerHTML = html;
+}
+
+function short(h) { if (!h || h.length < 16) return h || '--'; return h.slice(0, 8) + '...' + h.slice(-6); }
+</script>
+
+</body>
+</html>

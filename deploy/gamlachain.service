@@ -7,7 +7,7 @@ Type=simple
 User=gamla
 Group=gamla
 WorkingDirectory=/opt/gamlachain
-Environment=HOST=0.0.0.0
+Environment=HOST=127.0.0.1
 Environment=PORT=8000
 Environment=MINING_DIFFICULTY=4
 Environment=MINING_REWARD=50.0

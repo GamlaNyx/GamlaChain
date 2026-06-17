@@ -232,20 +232,9 @@ const FETCH_TIMEOUT = 5000;
 
 function normalizeUrl(u) { return u.replace(/\/+$/,''); }
 function loadNodes() {
-  const origin = window.location.origin || 'http://127.0.0.1:8000';
-  const stored = localStorage.getItem('gamla_nodes');
-  if (stored) {
-    try {
-      const urls = JSON.parse(stored).map(normalizeUrl);
-      // Replace any 127.0.0.1 entries with current origin when accessed remotely
-      const fixed = urls.map(u => u.includes('127.0.0.1') && !origin.includes('127.0.0.1') ? origin : u);
-      if (JSON.stringify(fixed) !== JSON.stringify(urls)) {
-        localStorage.setItem('gamla_nodes', JSON.stringify(fixed));
-      }
-      return fixed;
-    } catch { /* use default */ }
-  }
-  return [origin];
+  const defaultUrl = window.location.origin || 'http://127.0.0.1:8000';
+  try { return JSON.parse(localStorage.getItem('gamla_nodes')||JSON.stringify([defaultUrl])).map(normalizeUrl); }
+  catch { return [defaultUrl]; }
 }
 function saveNodes(urls) { localStorage.setItem('gamla_nodes', JSON.stringify(urls)); }
 

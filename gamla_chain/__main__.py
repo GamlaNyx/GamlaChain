@@ -38,7 +38,7 @@ def main():
 
     init_auth_middleware(auth_manager)
     init_auth_routes(auth_manager, wallet_manager)
-    init_wallet_routes(wallet_manager, manager.blockchain)
+    init_wallet_routes(wallet_manager, manager.blockchain, auth_manager=auth_manager)
     init_admin_routes(auth_manager, wallet_manager, manager.blockchain)
     init_faucet_routes(wallet_manager, manager.blockchain, persistence)
 

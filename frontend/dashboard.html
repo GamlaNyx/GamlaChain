@@ -102,19 +102,25 @@
       <div class="card" style="max-width:520px;">
         <div class="form-group">
           <label class="form-label">发送钱包</label>
-          <select id="txFromWallet" class="select"></select>
+          <select id="txFromWallet" class="select" onchange="onSenderWalletChange()"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">接收方</label>
+          <select id="txRecipientUser" class="select" onchange="onRecipientUserChange()">
+            <option value="">-- 选择用户（自动填入主钱包地址） --</option>
+          </select>
         </div>
         <div class="form-group">
           <label class="form-label">接收地址</label>
-          <input type="text" id="txToAddress" class="input input-mono" placeholder="0x...">
+          <input type="text" id="txToAddress" class="input input-mono" placeholder="0x...（也可手动输入）">
         </div>
         <div class="form-group">
           <label class="form-label">金额 (GLC)</label>
           <input type="number" id="txAmount" class="input" placeholder="0.00" step="0.0001" min="0.0001">
         </div>
         <div class="form-group">
-          <label class="form-label">发送钱包私钥</label>
-          <input type="password" id="txPrivateKey" class="input input-mono" placeholder="输入私钥以签名交易">
+          <label class="form-label">发送钱包私钥 <span class="text-xs text-muted">(已自动填入)</span></label>
+          <input type="password" id="txPrivateKey" class="input input-mono" placeholder="选择发送钱包后自动填入">
         </div>
         <p class="text-sm text-muted mb-3"><i class="fa-solid fa-circle-info"></i> 手续费: 0 GLC</p>
         <button class="btn btn-accent" style="width:100%;" onclick="sendTransaction()">
@@ -298,6 +304,36 @@ async function loadWalletsForTransfer() {
   sel.innerHTML = (me.wallets || []).map(w =>
     `<option value="${w.address}" data-pk="${w.private_key || ''}">${w.label} — ${w.address.slice(0,12)}...</option>`
   ).join('');
+  // Auto-fill PK on load
+  onSenderWalletChange();
+  // Load user directory
+  loadUserDirectory();
+}
+
+function onSenderWalletChange() {
+  const sel = document.getElementById('txFromWallet');
+  const selected = sel.options[sel.selectedIndex];
+  const pk = selected?.getAttribute('data-pk') || '';
+  document.getElementById('txPrivateKey').value = pk;
+}
+
+async function loadUserDirectory() {
+  const res = await api('GET', '/api/v1/wallet/directory');
+  const sel = document.getElementById('txRecipientUser');
+  if (!res || !res.ok) return;
+  const me = await api('GET', '/api/v1/auth/me');
+  const myUsername = me?.user?.username || '';
+  sel.innerHTML = '<option value="">-- 选择用户（自动填入主钱包地址） --</option>' +
+    res.users.filter(u => u.username !== myUsername && u.main_wallet).map(u =>
+      `<option value="${u.main_wallet}" data-name="${u.username}">${u.username} — ${u.main_wallet.slice(0,14)}... (${u.role==='admin'?'管理员':'用户'})</option>`
+    ).join('');
+}
+
+function onRecipientUserChange() {
+  const sel = document.getElementById('txRecipientUser');
+  const selected = sel.options[sel.selectedIndex];
+  const addr = selected?.value || '';
+  if (addr) document.getElementById('txToAddress').value = addr;
 }
 
 async function sendTransaction() {
@@ -347,13 +383,18 @@ async function loadWalletHistory() {
 
 // FAUCET
 async function loadFaucet() {
+  // Reset button to default state FIRST
+  const btn = document.getElementById('fcClaimBtn');
+  btn.disabled = false;
+  btn.style.opacity = '1';
+  btn.innerHTML = '<i class="fa-solid fa-droplet"></i> 领取 10 GLC';
+
   const info = await api('GET', '/api/v1/faucet/info');
   if (info && info.ok) {
     document.getElementById('fcClaimed').textContent = info.data.claimed;
     document.getElementById('fcRemaining').textContent = info.data.remaining;
     document.getElementById('fcMaxClaims').textContent = info.data.max_claims;
     document.getElementById('fcAmount').textContent = info.data.claim_amount;
-    const btn = document.getElementById('fcClaimBtn');
     if (info.data.remaining <= 0) {
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-ban"></i> 已达领取上限';

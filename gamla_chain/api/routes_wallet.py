@@ -7,11 +7,13 @@ router = APIRouter(prefix="/api/v1/wallet")
 
 _wallet_manager = None
 _blockchain = None
+_auth = None
 
-def init_wallet_routes(wallet_manager, blockchain):
-    global _wallet_manager, _blockchain
+def init_wallet_routes(wallet_manager, blockchain, auth_manager=None):
+    global _wallet_manager, _blockchain, _auth
     _wallet_manager = wallet_manager
     _blockchain = blockchain
+    _auth = auth_manager
 
 class CreateWalletRequest(BaseModel):
     label: str = Field(default="", max_length=64)
@@ -60,3 +62,21 @@ async def send_transaction(req: CreateTransactionRequest, user: User = Depends(g
     tx = Transaction(sender=req.sender_address, receiver=req.receiver_address, amount=req.amount, timestamp=time.time())
     _blockchain.add_transaction(tx)
     return {"ok": True, "message": "Transaction added to pool", "tx_hash": tx.tx_hash}
+
+
+@router.get("/directory")
+async def user_directory(user: User = Depends(get_current_user)):
+    """Public user directory — list all users with their main wallet address."""
+    if _auth is None:
+        return {"ok": True, "users": []}
+    users = []
+    for u in _auth.users.values():
+        wallets = _wallet_manager.get_user_wallets(u.id)
+        main_wallet = wallets[0]["address"] if wallets else None
+        users.append({
+            "username": u.username,
+            "role": u.role,
+            "main_wallet": main_wallet,
+            "wallet_count": len(wallets),
+        })
+    return {"ok": True, "users": users}

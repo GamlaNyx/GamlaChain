@@ -301,21 +301,25 @@ async function loadWalletsForTransfer() {
   const me = await api('GET', '/api/v1/auth/me');
   if (!me || !me.ok) return;
   const sel = document.getElementById('txFromWallet');
-  sel.innerHTML = (me.wallets || []).map(w =>
-    `<option value="${w.address}" data-pk="${w.private_key || ''}">${w.label} — ${w.address.slice(0,12)}...</option>`
-  ).join('');
-  // Auto-fill PK on load
-  onSenderWalletChange();
+  const wallets = me.wallets || [];
+  let html = '';
+  wallets.forEach((w, i) => {
+    html += `<option value="${w.address}|${w.private_key || ''}">${w.label} — ${w.address.slice(0,12)}...</option>`;
+  });
+  sel.innerHTML = html;
+  // Auto-fill PK directly from first wallet
+  if (wallets.length > 0) {
+    document.getElementById('txPrivateKey').value = wallets[0].private_key || '';
+  }
   // Load user directory
   loadUserDirectory();
 }
 
 function onSenderWalletChange() {
   const sel = document.getElementById('txFromWallet');
-  const idx = sel.selectedIndex;
-  if (idx < 0) return;
-  const pk = sel.options[idx].dataset.pk || '';
-  document.getElementById('txPrivateKey').value = pk;
+  const val = sel.value || '';
+  const parts = val.split('|');
+  document.getElementById('txPrivateKey').value = parts[1] || '';
 }
 
 async function loadUserDirectory() {
@@ -339,8 +343,10 @@ function onRecipientUserChange() {
 
 async function sendTransaction() {
   const sel = document.getElementById('txFromWallet');
-  const sender_address = sel.value;
-  const private_key = document.getElementById('txPrivateKey').value.trim();
+  const val = sel.value || '';
+  const parts = val.split('|');
+  const sender_address = parts[0] || '';
+  const private_key = document.getElementById('txPrivateKey').value.trim() || parts[1] || '';
   const receiver_address = document.getElementById('txToAddress').value.trim();
   const amount = parseFloat(document.getElementById('txAmount').value);
 

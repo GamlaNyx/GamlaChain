@@ -18,7 +18,7 @@ def init_admin_routes(auth_manager, wallet_manager, blockchain):
 async def dashboard(user: User = Depends(get_admin_user)):
     chain = _admin_chain
     total_tx = sum(len(b.transactions) for b in chain.chain)
-    total_supply = sum(tx.amount for b in chain.chain for tx in b.transactions if tx.sender == "network")
+    total_supply = sum(tx.amount for b in chain.chain for tx in b.transactions if tx.sender in ("network", "faucet"))
     return {"ok": True, "data": {"height": len(chain.chain), "difficulty": chain.difficulty, "mining_reward": chain.mining_reward, "total_transactions": total_tx, "total_supply": total_supply, "pending_count": len(chain.pending_transactions), "nodes": list(chain.nodes), "node_id": chain.node_identifier, "user_count": len(_admin_auth.users), "wallet_count": len(_admin_wm.wallets)}}
 
 @router.get("/chain")

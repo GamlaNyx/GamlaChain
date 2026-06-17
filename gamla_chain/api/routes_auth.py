@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Header
 from pydantic import BaseModel, Field
 from gamla_chain.api.middleware import get_current_user
 from gamla_chain.core.auth import User
@@ -39,7 +39,12 @@ async def login(req: LoginRequest):
     return {"ok": True, "token": session.token, "role": user.role, "username": user.username}
 
 @router.post("/logout")
-async def logout(user: User = Depends(get_current_user)):
+async def logout(authorization: str | None = Header(None)):
+    """Invalidate session. Reads token from Authorization header directly."""
+    if authorization:
+        parts = authorization.split()
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            _auth_manager.logout(parts[1])
     return {"ok": True, "message": "Logged out"}
 
 @router.get("/me")

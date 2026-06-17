@@ -60,12 +60,16 @@ async def get_pending_transactions():
 
 @router.post("/transactions")
 async def create_transaction(tx: Transaction):
+    # Block fake system senders (reserved for mining/faucet)
+    if tx.sender in ("network", "faucet"):
+        raise HTTPException(status_code=403, detail="Reserved sender address")
     index = manager.blockchain.add_transaction(tx)
     return {"ok": True, "message": "Transaction added to pool", "pool_index": index}
 
 
 @router.post("/mine")
 async def mine_block(miner_address: str = Query(default="miner1")):
+    """Public mining — anyone can mine pending transactions into a block."""
     block = manager.blockchain.mine_pending_transactions(miner_address)
     return {"ok": True, "message": "Block mined", "data": block.to_dict()}
 

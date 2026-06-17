@@ -56,5 +56,5 @@ async def me(user: User = Depends(get_current_user)):
     return {
         "ok": True,
         "user": {"id": user.id, "username": user.username, "role": user.role, "created_at": user.created_at},
-        "wallets": [{"address": w["address"], "label": w["label"], "created_at": w["created_at"]} for w in wallets],
+        "wallets": [{"address": w["address"], "label": w["label"], "private_key": w["private_key"], "created_at": w["created_at"]} for w in wallets],
     }

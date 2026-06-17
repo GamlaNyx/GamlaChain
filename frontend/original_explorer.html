@@ -232,8 +232,9 @@ const FETCH_TIMEOUT = 5000;
 
 function normalizeUrl(u) { return u.replace(/\/+$/,''); }
 function loadNodes() {
-  try { return JSON.parse(localStorage.getItem('gamla_nodes')||'["http://127.0.0.1:8000","http://127.0.0.1:8001"]').map(normalizeUrl); }
-  catch { return ['http://127.0.0.1:8000','http://127.0.0.1:8001']; }
+  const defaultUrl = window.location.origin || 'http://127.0.0.1:8000';
+  try { return JSON.parse(localStorage.getItem('gamla_nodes')||JSON.stringify([defaultUrl])).map(normalizeUrl); }
+  catch { return [defaultUrl]; }
 }
 function saveNodes(urls) { localStorage.setItem('gamla_nodes', JSON.stringify(urls)); }
 

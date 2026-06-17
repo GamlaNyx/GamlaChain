@@ -42,7 +42,7 @@ def main():
     init_admin_routes(auth_manager, wallet_manager, manager.blockchain)
     init_faucet_routes(wallet_manager, manager.blockchain, persistence)
 
-    app = create_app(static_dir=config.static_dir)
+    app = create_app(config)
     print(f"[startup] GamlaChain v0.2.0 starting on {config.host}:{config.port}")
     print(f"[startup] Data dir: {config.data_dir}")
     print(f"[startup] Users registered: {len(auth_manager.users)}")

@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException, Depends, Header
+from fastapi import APIRouter, HTTPException, Depends, Header, Request
 from pydantic import BaseModel, Field
 from gamla_chain.api.middleware import get_current_user
 from gamla_chain.core.auth import User
+from gamla_chain.utils.rate_limiter import check_rate_limit, login_limiter, register_limiter
 
 router = APIRouter(prefix="/api/v1/auth")
 
@@ -22,7 +23,8 @@ class LoginRequest(BaseModel):
     password: str
 
 @router.post("/register")
-async def register(req: RegisterRequest):
+async def register(req: RegisterRequest, request: Request):
+    await check_rate_limit(request, register_limiter, "registration")
     try:
         user = _auth_manager.register(req.username, req.password)
     except ValueError as e:
@@ -31,7 +33,8 @@ async def register(req: RegisterRequest):
     return {"ok": True, "message": "Registration successful", "role": user.role}
 
 @router.post("/login")
-async def login(req: LoginRequest):
+async def login(req: LoginRequest, request: Request):
+    await check_rate_limit(request, login_limiter, "login")
     session = _auth_manager.login(req.username, req.password)
     if session is None:
         raise HTTPException(status_code=401, detail="Invalid username or password")

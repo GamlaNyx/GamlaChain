@@ -26,7 +26,8 @@ class TestIntegration:
         init_wallet_routes(cls.wm, cls.blockchain)
         init_admin_routes(cls.auth, cls.wm, cls.blockchain)
 
-        cls.app = create_app(static_dir="frontend")
+        from gamla_chain.config import Config
+        cls.app = create_app(Config())
         cls.client = TestClient(cls.app)
         cls._token = None
 

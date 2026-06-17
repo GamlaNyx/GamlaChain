@@ -12,6 +12,8 @@ Environment=PORT=8000
 Environment=MINING_DIFFICULTY=4
 Environment=MINING_REWARD=50.0
 Environment=DATA_DIR=/opt/gamlachain/data
+Environment=CORS_ORIGINS=*
+Environment=SECRET_KEY=
 ExecStart=/opt/gamlachain/venv/bin/python3 -m gamla_chain
 Restart=on-failure
 RestartSec=5

@@ -4,16 +4,21 @@ After=network.target
 
 [Service]
 Type=simple
-User=www-data
+User=gamla
+Group=gamla
 WorkingDirectory=/opt/gamlachain
 Environment=HOST=0.0.0.0
 Environment=PORT=8000
 Environment=MINING_DIFFICULTY=4
 Environment=MINING_REWARD=50.0
 Environment=DATA_DIR=/opt/gamlachain/data
-ExecStart=/usr/bin/python3 -m gamla_chain
+ExecStart=/opt/gamlachain/venv/bin/python3 -m gamla_chain
 Restart=on-failure
 RestartSec=5
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
 
 [Install]
 WantedBy=multi-user.target

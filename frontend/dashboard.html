@@ -312,8 +312,9 @@ async function loadWalletsForTransfer() {
 
 function onSenderWalletChange() {
   const sel = document.getElementById('txFromWallet');
-  const selected = sel.options[sel.selectedIndex];
-  const pk = selected?.getAttribute('data-pk') || '';
+  const idx = sel.selectedIndex;
+  if (idx < 0) return;
+  const pk = sel.options[idx].dataset.pk || '';
   document.getElementById('txPrivateKey').value = pk;
 }
 

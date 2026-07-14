@@ -1,7 +1,22 @@
 # GamlaChain 生产环境部署指南
 
 > 适用系统：Ubuntu 20.04+ / Debian 11+  
-> 最终效果：`https://your-domain.com` — 全站 HTTPS，Nginx 反向代理，防火墙仅开放 22/80/443
+> 最终效果：`http(s)://your-domain.com/<子路径>` — Nginx 反向代理，防火墙仅开放必要端口  
+> 当前部署：`http://gamla.cn/gamlachain/`
+
+## 子路径部署说明
+
+项目使用相对路径，天然支持部署在任意子路径下。Nginx 配置示例：
+
+```nginx
+location /gamlachain/ {
+    rewrite ^/gamlachain(.*)$ $1 break;
+    proxy_pass http://127.0.0.1:8000;
+    ...
+}
+```
+
+用户访问 `http://gamla.cn/gamlachain/` 即可，不需要修改任何代码。
 
 ---
 

@@ -2,39 +2,48 @@
 
 ## 1. 项目概述
 
-GamlaChain 是一个用 Python 实现的私有区块链教学项目，覆盖区块生成、交易流转、工作量证明 (PoW)、共识算法、REST API 和前端浏览器等完整功能模块。
+GamlaChain 是一个用 Python 实现的教学区块链项目。从最初的单节点演示演进为多用户 Web 应用，支持用户注册、钱包管理、转账交易、管理控制台、服务器部署。
 
-**技术栈:** Python 3.10+ / FastAPI / Chart.js / Tailwind CSS
+**技术栈:** Python 3.10+ / FastAPI / bcrypt / Chart.js / Neumorphism CSS
+
+**在线地址:** http://gamla.cn/gamlachain/
 
 ---
 
 ## 2. 系统架构
 
 ```
-┌──────────────────────────────────────────────────────┐
-│                    Frontend (SPA)                     │
-│      玻璃拟态 UI / Chart.js / 3s 轮询 / 中文界面       │
-└──────────────────────┬───────────────────────────────┘
-                       │ HTTP REST (11 endpoints)
-┌──────────────────────▼───────────────────────────────┐
-│                  API Layer (FastAPI)                  │
-│  /chain  /mine  /transactions  /nodes/*  /balance    │
-└──────────────────────┬───────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                    Frontend (纯 HTML/CSS/JS)                  │
+│  新拟物设计 / Chart.js / 3s 轮询 / SPA 侧边栏导航            │
+│  ├── index.html        介绍页                                │
+│  ├── login/register    登录注册                              │
+│  ├── dashboard.html    用户仪表盘（总览/钱包/转账/记录/水龙头）│
+│  └── admin.html        管理控制台（仪表盘/区块链/用户/挖矿）   │
+└──────────────────────┬───────────────────────────────────────┘
+                       │ HTTP REST (Bearer Token 认证)
+┌──────────────────────▼───────────────────────────────────────┐
+│                  API Layer (FastAPI)                          │
+│  routes.py / routes_auth.py / routes_wallet.py                │
+│  routes_admin.py / routes_faucet.py                          │
+│  middleware.py (get_current_user / get_admin_user)            │
+└──────────────────────┬───────────────────────────────────────┘
                        │
-┌──────────────────────▼───────────────────────────────┐
-│                   Core Layer                          │
-│  ┌──────────┐  ┌──────────┐  ┌──────────────────┐   │
-│  │  Block   │  │Transaction│  │   Blockchain     │   │
-│  │  - index │  │ - sender  │  │  - chain[]       │   │
-│  │  - hash  │  │ - receiver│  │  - pending_txs[] │   │
-│  │  - nonce │  │ - amount  │  │  - nodes{}       │   │
-│  └──────────┘  └──────────┘  │  - consensus     │   │
-│  ┌──────────┐  ┌──────────────┐  - node_id       │   │
-│  │ Consensus│  │    Wallet    │  └──────────────────┘   │
-│  │ - PoW    │  │ - key/addr   │                         │
-│  │ - valid  │  │ - sign       │                         │
-│  └──────────┘  └──────────────┘                         │
-└──────────────────────────────────────────────────────┘
+┌──────────────────────▼───────────────────────────────────────┐
+│                   Core Layer                                  │
+│  ┌──────────┐  ┌──────────┐  ┌──────────────────┐           │
+│  │  Block   │  │Transaction│  │   Blockchain     │           │
+│  └──────────┘  └──────────┘  │  - chain[]        │           │
+│  ┌──────────┐  ┌──────────────┐  - pending_txs[]  │           │
+│  │ Consensus│  │WalletManager │  - nodes{}        │           │
+│  │ - PoW    │  │ - user wallets│  - consensus     │           │
+│  └──────────┘  └──────────────┘  └──────────────────┘        │
+│  ┌──────────┐  ┌──────────────┐                              │
+│  │AuthManager│  │PersistenceMgr│                              │
+│  │- bcrypt  │  │ - JSON files │                              │
+│  │- session │  └──────────────┘                              │
+│  └──────────┘                                                 │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -52,100 +61,86 @@ Transaction
 └── tx_hash: str         # SHA-256(sender + receiver + amount + timestamp)
 ```
 
+系统保留地址：`"network"`（矿工奖励）、`"faucet"`（水龙头）。普通交易端点已拦截这些地址。
+
 ### 3.2 区块 (Block)
 
 ```
 Block
-├── index: int                # 区块高度
-├── previous_hash: str        # 前一区块哈希
-├── timestamp: float          # 出块时间
-├── transactions: list[Transaction]  # 包含的交易列表
-├── nonce: int                # PoW 计数器
-└── hash: str                 # SHA-256(index + prev_hash + timestamp + txs + nonce)
+├── index: int                    # 区块高度
+├── previous_hash: str            # 前一区块哈希
+├── timestamp: float              # 出块时间
+├── transactions: list[Transaction]  # 交易列表
+├── nonce: int                    # PoW 计数器
+└── hash: str                     # SHA-256(index + prev_hash + timestamp + txs + nonce)
 ```
 
-### 3.3 区块链 (Blockchain)
+### 3.3 用户 (User)
 
 ```
-Blockchain
-├── chain: list[Block]                # 完整链数据
-├── pending_transactions: list[Transaction]  # 待打包交易池
-├── difficulty: int = 4               # 挖矿难度 (hash 前导零数量)
-├── mining_reward: float = 50.0       # 出块奖励
-├── nodes: set[str]                   # 邻居节点 netloc 集合
-└── node_identifier: str              # 本节点 UUID 标识
+User
+├── id: str            # secrets.token_hex(16)
+├── username: str      # 登录名 (2-32 字符)
+├── password_hash: str # bcrypt(12 rounds)
+├── role: str          # "admin" | "user"
+└── created_at: float  # 注册时间
+```
+
+第一个注册的用户自动获得 `admin` 角色。
+
+### 3.4 Session
+
+```
+Session
+├── token: str         # secrets.token_hex(16)
+├── user_id: str       # 关联 User.id
+├── created_at: float
+└── expires_at: float  # 7 天后过期
 ```
 
 ---
 
+
 ## 4. 共识机制
 
-### 4.1 工作量证明 (Proof of Work)
+### 4.1 工作量证明 (PoW)
 
 ```
 算法流程:
-1. 设置 target = "0" × difficulty  (例如 difficulty=4 → "0000")
+1. target = "0" × difficulty  (difficulty=4 → "0000")
 2. nonce = 0
-3. 计算 block.hash = SHA-256(index + prev_hash + timestamp + txs + nonce)
+3. block.hash = SHA-256(index + prev_hash + timestamp + txs + nonce)
 4. 如果 block.hash 以 target 开头 → 完成
 5. 否则 nonce += 1, 回到步骤 3
 ```
 
-**验证:** 接收方仅需一次哈希计算即可验证，满足"难计算、易验证"的核心要求。
+### 4.2 最长链共识
 
-### 4.2 最长链共识 (Longest Chain Rule)
-
-```
-多节点工作流程:
-
-1. Mesh 注册:
-   所有节点通过 /nodes/register 互相注册邻居地址
-
-2. 交易广播:
-   客户端向所有节点发送同一笔交易
-   → 各节点 pending_transactions 同步增长
-
-3. 出块 (仅矿工节点):
-   节点 0 执行 /mine 打包所有 pending 交易
-   → 新区块加入节点 0 的链
-
-4. 共识同步:
-   其余节点执行 /nodes/resolve
-   → 检测到节点 0 的链更长且有效
-   → 替换本地链 (最长链胜出)
-
-5. 结果:
-   所有节点链数据一致 (最终一致性)
-```
-
-### 4.3 链验证
-
-`valid_chain(chain)` 接受外部链逐块验证：
-1. 每个块的 `previous_hash` 匹配前一个块的 `hash`
-2. 每个块的 `hash` 前缀满足难度要求（`difficulty` 个零）
-3. 每个块的 `hash` 等于重新计算的哈希值
+节点通过 `/nodes/register` 互相注册 → 交易广播到所有节点 → 矿工出块 → 其余节点执行 `/nodes/resolve` 用最长有效链替换本地链。
 
 ---
 
 ## 5. API 设计
 
-### 5.1 端点总览
+### 5.1 认证方案
 
-| 方法 | 路径 | 功能 | 对应教学 |
-|------|------|------|---------|
-| GET | `/api/v1/chain` | 返回完整区块链数据 | Step 2 |
-| GET | `/api/v1/blocks/latest` | 最新区块 | 扩展 |
-| GET | `/api/v1/blocks/{index}` | 按高度查询区块 | 扩展 |
-| POST | `/api/v1/transactions` | 创建交易 | Step 2 |
-| GET | `/api/v1/transactions/pending` | 查询待打包交易池 | Step 3 |
-| POST | `/api/v1/mine` | 挖矿打包新区块 | Step 2 |
-| GET | `/api/v1/balance/{address}` | 查询地址余额 | 扩展 |
-| GET | `/api/v1/history/{address}` | 查询地址交易历史 | 扩展 |
-| GET | `/api/v1/validate` | 校验本地区块链 | 扩展 |
-| POST | `/api/v1/nodes/register` | 注册邻居节点 | Step 4 |
-| GET | `/api/v1/nodes/resolve` | 触发共识决议 | Step 4 |
+- 注册：bcrypt 哈希密码（12 rounds），自动创建首个钱包
+- 登录：返回 32 位 hex session token
+- 认证：`Authorization: Bearer <token>` Header
+- 登出：服务端销毁 session（不仅仅是清除前端 localStorage）
+- 速率限制：登录 10次/分钟/IP，注册 5次/分钟/IP
 
-### 5.2 统一响应格式
+### 5.2 模块化路由
+
+| 路由文件 | 前缀 | 功能 |
+|---------|------|------|
+| `routes.py` | `/api/v1` | 区块链核心 + 节点管理（部分公开） |
+| `routes_auth.py` | `/api/v1/auth` | 用户注册/登录/登出/当前用户 |
+| `routes_wallet.py` | `/api/v1/wallet` | 钱包 CRUD + 转账 + 用户目录 |
+| `routes_admin.py` | `/api/v1/admin` | 管理仪表盘/链/交易池/用户/挖矿 |
+| `routes_faucet.py` | `/api/v1/faucet` | 水龙头状态 + 领取 |
+
+### 5.3 统一响应格式
 
 ```json
 {
@@ -157,98 +152,101 @@ Blockchain
 
 ---
 
-## 6. 模块结构
+## 6. 前端设计
+
+### 6.1 新拟物设计系统 (Neumorphism)
 
 ```
-gamla_chain/
-├── __main__.py          → 启动入口 (uvicorn)
-├── config.py            → 全局配置 (dataclass)
-├── core/
-│   ├── block.py          → Block (dataclass)
-│   ├── transaction.py    → Transaction (dataclass)
-│   ├── chain.py          → Blockchain (核心逻辑 + 共识)
-│   ├── consensus.py      → proof_of_work() / is_valid_proof()
-│   ├── wallet.py         → Wallet (地址生成 / 签名)
-│   └── blockchain_manager.py → 全局单例
-├── api/
-│   ├── server.py         → FastAPI 应用实例 + CORS
-│   └── routes.py         → 全部 API 路由
-└── utils/
-    ├── crypto.py          → SHA-256 哈希函数
-    └── serializer.py      → JSON 序列化
+颜色:
+  底色       #f3efe7  (米白)
+  阴影暗部   #d5d0c5  (暖灰)
+  阴影亮部   #ffffff
+  强调色     #5a8a6e  (墨绿)
+  成功色     #5a8a6e
+  警告色     #c9a96e  (暖金)
+  错误色     #c97070  (柔和红)
+
+阴影:
+  凸起: 6px 6px 12px #d5d0c5, -6px -6px 12px #fff
+  凹陷: inset 4px 4px 8px #d5d0c5, inset -4px -4px 8px #fff
+
+字体:
+  标题: DM Sans + Noto Serif SC (思源宋体)
+  正文: Inter + Noto Sans SC
+  等宽: JetBrains Mono
 ```
+
+### 6.2 页面架构
+
+```
+介绍页 (/index.html)
+├── 登录 (/login.html)
+│   └── 管理员 → /admin.html
+│   └── 普通用户 → /dashboard.html
+└── 注册 (/register.html)
+    └── 成功后 → /login.html
+
+用户仪表盘 (/dashboard.html) — SPA 侧边栏
+├── 总览（余额/交易/钱包统计 + 管理员入口卡片）
+├── 我的钱包（列表/创建/显示私钥/复制地址）
+├── 转账（发送钱包→接收用户→金额→私钥自动填入）
+├── 交易记录（按钱包分组）
+└── 水龙头（领取状态/领取按钮）
+
+管理控制台 (/admin.html) — SPA 侧边栏
+├── 仪表盘（系统统计）
+├── 区块链（iframe 嵌入完整浏览器 — 单/多节点/图表/自动出块/模拟交易）
+├── 交易池（待打包交易）
+├── 用户管理（用户列表）
+└── 挖矿（手动出块）
+```
+
+### 6.3 模拟引擎
+
+| 功能 | 行为 |
+|------|------|
+| ⛏ 自动出块 | 每 2.5 秒在节点 0 挖矿，多节点自动共识同步 |
+| 📡 模拟交易 | 5 个测试钱包随机互转（0.08-0.38s 间隔） |
+
+两个功能可独立运行或同时运行。
 
 ---
 
-## 7. 前端架构
+## 7. 安全设计
 
-单文件 SPA (`frontend/index.html`, ~1052 行)，纯 HTML/CSS/JS。
-
-### 7.1 单节点布局
-
-```
-┌─────────────────────────────────────────────────┐
-│ 导航栏: 单节点 │ 多节点 │ 模拟交易 │ 时钟         │
-├─────────────────────────────────────────────────┤
-│ 区块高度▲ │ 总交易数 │ 难度 │ 待打包池 │ 流通总量 │
-├─────────┬──────────────┬────────────────────────┤
-│ 区块     │ 发起交易      │ 出块时间 (图表)        │
-│ [搜索]   │ [随机填充]    │ 每块交易数 (图表)      │
-│          │ 发送方 接收方 │ 区块大小 (图表)        │
-│ (列表)   │ 金额 [发送]  │                       │
-│          │              │                       │
-│ 可视化   │ 待打包交易    │                       │
-│ #42◆#43  │ (列表)       │                       │
-├─────────┴──────────────┴────────────────────────┤
-│ TX池饼图 │ 链有效性 │ 地址浏览器 (余额+历史)     │
-├─────────────────────────────────────────────────┤
-│ 链:gamla-8848 │ 共识:PoW │ 节点:3cce... │ 奖励:50 │
-└─────────────────────────────────────────────────┘
-```
-
-### 7.2 多节点布局
-
-```
-┌─────────────────────────────────────────────────┐
-│ 节点管理: [●A] [●B] [●C] [+Add___]               │
-│ 共识: [全部注册] 目标:[▼] [执行共识]  状态指示    │
-├─────────────────────────────────────────────────┤
-│ 区块链可视化:                                     │
-│  节点0: #42◆#43◆#44...                           │
-│  节点1: #42◆#43◆#44...                           │
-├─────────────────────────────────────────────────┤
-│ 统计对比表 (高度/TX/待打包/难度/有效性/对等)      │
-├──────────────────┬──────────────────────────────┤
-│ 节点卡片         │ 节点卡片                      │
-│ (区块+交易池)    │ (区块+交易池)                  │
-├──────────────────┴──────────────────────────────┤
-│ 图表对比 (最多 4 个节点)                         │
-└─────────────────────────────────────────────────┘
-```
-
-### 7.3 模拟交易引擎
-
-```
-单节点模式:
-  TX → 单节点  →  出块 →  循环
-
-多节点模式 (真实区块链模拟):
-  ① Mesh 自动注册
-  ② TX 广播到所有节点 (同一笔交易)
-  ③ 节点 0 挖矿出块
-  ④ 其余节点自动 /nodes/resolve 共识同步
-  ⑤ 所有节点链数据一致
-```
+| 措施 | 实现 |
+|------|------|
+| 密码存储 | bcrypt，12 rounds salt |
+| 登出销毁 Session | 服务端 `_auth_manager.logout(token)` |
+| 速率限制 | 登录 10次/分钟/IP，注册 5次/分钟/IP |
+| 伪造交易拦截 | `/transactions` 拒绝 `sender="network"/"faucet"` |
+| CORS 控制 | 生产环境限制 `CORS_ORIGINS=https://your-domain.com` |
+| 非 root 运行 | systemd `User=gamla`，`NoNewPrivileges=yes` |
+| 仅本机监听 | `HOST=127.0.0.1`，Nginx 反向代理 |
 
 ---
 
-## 8. 安全与局限
+## 8. 数据持久化
+
+```
+data/
+├── users.json       # 用户列表（含 bcrypt 密码哈希）
+├── wallets.json     # 钱包列表（含私钥）
+├── sessions.json    # 活跃 Session
+├── chain.json       # 区块链数据 + 待打包交易池
+└── faucet.json      # 水龙头领取记录
+```
+
+每次链状态变化、用户操作后自动保存。启动时自动恢复。
+
+---
+
+## 9. 局限与适用范围
 
 | 项目 | 说明 |
 |------|------|
-| 密码学 | SHA-256 哈希，非 ECDSA 签名（教学简化） |
-| 钱包 | 私钥为随机 hex 字符串，地址为 SHA-256(私钥) |
-| 网络 | 节点间 HTTP 明文通信，无 TLS |
+| 密码学 | SHA-256 哈希，简化签名（教学用途，非 ECDSA） |
+| 钱包 | 私钥明文存储于服务器（教学简化） |
+| 网络 | 节点间 HTTP 明文通信 |
 | 共识 | 最长链规则，无拜占庭容错 |
-| 挖矿 | 单矿工模式（节点 0），非竞争挖矿 |
-| 适用场景 | 教学演示、私有链，不可用于生产环境 |
+| 适用场景 | 教学演示、内部实验网络，不可用于生产环境 |
